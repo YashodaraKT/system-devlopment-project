@@ -1,0 +1,35 @@
+.logsignup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .logsignup-form {
+    background-color: transparent;
+    padding: 20px;
+    border: 2px solid black;
+    border-radius: 10px;
+    width: 25%;
+    margin-left: 100px;
+    margin-right: auto;
+  }
+  
+  .logsignup-form h1 {
+    margin-bottom: 20px;
+    
+  }
+  
+  .logsignup-input {
+    margin-top: 20px;
+  }
+  .logsignup-input label {
+    font-size: 1.2em; /* Adjust font size as needed */
+}
+
+  .logsignup-button {
+    margin-top: 20px; 
+}
