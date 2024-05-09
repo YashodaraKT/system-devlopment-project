@@ -4,6 +4,12 @@ import Accordion from 'react-bootstrap/Accordion';
 import image1 from '../assets/image1.jpg';
 import image2 from '../assets/image2.jpg';
 import image3 from '../assets/image3.jpg';
+import image4 from '../assets/image4.jpg';
+import image5 from '../assets/image5.jpg';
+import image6 from '../assets/image6.jpg';
+import image7 from '../assets/image7.jpg';
+import image8 from '../assets/image8.jpg';
+
 
 function Desc() {
   return (
@@ -21,9 +27,9 @@ function Desc() {
             style={{ height: '550px',Width: 'auto',flex: '1',margin: '30px' }}
           >
             
-            <Card.Body style={{ textAlign: 'justify' }}>
+            <Card.Body style={{textAlign: 'justify' }}>
               
-              <Card.Text style={{fontSize: '1.2rem'} }>
+              <Card.Text style={{fontSize: '1.2rem'}}>
               Welcome to Moro Farms! <br/>
               At Moro Farm, we're not just about farming – we're about fostering a sustainable ecosystem that benefits both our environment and our community. Nestled in the heart of Horana, Sri Lanka, we specialize in producing top-notch fishmeal sourced from the abundance of our oceans.
              <br/><br/>
@@ -50,12 +56,17 @@ function Desc() {
             <Accordion.Item eventKey="1">
               <Accordion.Header>If you are a customer,</Accordion.Header>
               <Accordion.Body style={{ textAlign: 'justify' }}>
-                <ul>
-                <li>Place orders and modify scheduled orders at the beginning of each month.</li>
-                <li>Have the option to place additional orders.</li>
-                <li>View current month payments.</li>
-                <li>Review payment history and search by date range.</li>
-                <li>Receive reminders for pending payments before 5 days.</li>
+              <ul style={{ listStyleType: 'none' }}>
+                <li> <img src={image4} alt="Image 4" style={{ width: '150px', height: '150px' }}/>
+                  Modify scheduled orders at the beginning of month.</li>
+                <li><img src={image5} alt="Image 5" style={{ width: '150px', height: '150px' }}/>
+                  Have the option to place additional orders.</li>
+                <li><img src={image6} alt="Image 6" style={{ width: '150px', height: '150px' }}/>
+                  View current month payments.</li>
+                <li><img src={image7} alt="Image 7" style={{ width: '150px', height: '150px' }}/>
+                  Review payment history and search by date range.</li>
+                <li><img src={image8} alt="Image 8" style={{ width: '150px', height: '150px' }}/>
+                  Receive reminders for pending payments before 5 days.</li>
               </ul>
               </Accordion.Body>
             </Accordion.Item>

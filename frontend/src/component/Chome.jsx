@@ -23,7 +23,7 @@ function Chome() {
         
           </Carousel.Item>
 
-        <Carousel.Item>
+        <Carousel.Item >
             <img
               className="d-block w-100"
               src={h2Image}
@@ -34,7 +34,7 @@ function Chome() {
                 backgroundPosition: 'fixed'
               }}
             />
-            <Carousel.Caption>
+            <Carousel.Caption style={{color:"black"}}>
               <h3>Moro Farms</h3>
               <p>Feeding Farms, Preserving Seas.</p>
             </Carousel.Caption>
