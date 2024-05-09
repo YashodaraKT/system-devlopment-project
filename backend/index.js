@@ -31,6 +31,20 @@ app.post('/login',(req,res)=>{
         
 })
 
+
+app.get('/location', (req, res) => {
+    const sql = 'SELECT Location_Id, Location_Name FROM location';
+    db.query(sql, (err, result) => {
+      if (err) {
+        console.error('Error fetching locations:', err);
+        res.status(500).json({ error: 'Failed to fetch locations' });
+      } else {
+        res.json(result);
+      }
+    });
+  });
+
+  
 app.listen(8081,()=>{
     console.log ("listening...")
 })

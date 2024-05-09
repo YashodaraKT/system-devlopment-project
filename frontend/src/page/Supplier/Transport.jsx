@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import ProfilenavBar from '../../component/ProfilenavBar';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Offcanvas from 'react-bootstrap/Offcanvas';
-import { Calendar } from 'calendar';
 
 function Transport() {
-
   const [showScheduledAppointments, setShowScheduledAppointments] = useState(false);
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await axios.get('http://localhost:8081/location');
+        setLocations(response.data);
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
 
   const handleCloseScheduledAppointments = () => setShowScheduledAppointments(false);
   const handleShowScheduledAppointments = () => setShowScheduledAppointments(true);
@@ -18,8 +31,10 @@ function Transport() {
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
         <h1>Transport</h1>
       </div>
-      <div style={{ marginLeft: '50px',display: 'inline-block' }}>
-        <Button variant="success" onClick={handleShowScheduledAppointments} style={{ marginLeft: '20px' }}>Location Areas</Button>
+      <div style={{ marginLeft: '50px', display: 'inline-block' }}>
+        <Button variant="success" onClick={handleShowScheduledAppointments} style={{ marginLeft: '20px' }}>
+          Location Areas
+        </Button>
       </div>
 
       <br />
@@ -28,12 +43,13 @@ function Transport() {
         <Form>
           <Form.Group className="mb-3" controlId="formBasicType">
             <Form.Label>Location</Form.Label>
-            <Form.Select aria-label="Default select example" >
+            <Form.Select aria-label="Default select example">
               <option>Select the Location</option>
-              <option value="1">Beruwala</option>
-              <option value="2">Kalutara</option>
-              <option value="3">Panadura</option>
-              <option value="2">Atalugama</option>
+              {locations.map((location) => (
+                <option key={location.Location_Id} value={location.Location_Name}>
+                  {location.Location_Name}
+                </option>
+              ))}
             </Form.Select>
           </Form.Group>
 
@@ -52,13 +68,14 @@ function Transport() {
             <Form.Control type="number" placeholder="Enter the Number" />
           </Form.Group>
 
+          {/* Rest of the form */}
+
           <Button variant="primary" type="submit">
             Submit
           </Button>
         </Form>
-
       </div>
-     
+
       <Offcanvas show={showScheduledAppointments} onHide={handleCloseScheduledAppointments}>
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>Available Locations</Offcanvas.Title>
