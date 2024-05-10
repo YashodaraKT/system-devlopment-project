@@ -14,28 +14,27 @@ function Login() {
   function handleSubmit(event) {
     event.preventDefault();
     axios.post('http://localhost:8081/login', { User_Name, Password })
-
-    .then(res => {
-      if (res.data.status === "success") {
-        if (res.data.userType === 'Supplier') {
-          console.log(res.data.userType);
-          navigate('/SupplierHome');
-        } else if (res.data.userType === 'Customer') {
-          navigate('/CusHome');
-        } else if (res.data.userType === 'Employee') {
-          navigate('/emphome');
+      .then(res => {
+        if (res.data.status === "success") {
+          // Store entire user object in local storage
+          localStorage.setItem('user', JSON.stringify(res.data.user));
+          if (res.data.user.User_Type === 'Supplier') {
+            navigate('/SupplierHome');
+          } else if (res.data.user.User_Type === 'Customer') {
+            navigate('/CusHome');
+          } else if (res.data.user.User_Type === 'Employee') {
+            navigate('/emphome');
+          }
+        } else {
+          setError(res.data.status);
         }
-      } else {
-        setError(res.data.status);
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      setError(err);
-    });
+      })
+      .catch(err => {
+        console.error(err);
+        setError(err);
+      });
   }
-
-
+  
   const Navigate= useNavigate();
   return (
     <div className='logsignup-container' style={{backgroundImage: `url(${backgroundImage})`}}>

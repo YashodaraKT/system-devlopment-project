@@ -1,11 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ProfilenavBar from '../../component/ProfilenavBar';
-import {Table, Form} from 'react-bootstrap';
+import { Table, Form } from 'react-bootstrap';
+import axios from 'axios';
 
 function Spayment() {
+  const [supplies, setSupplies] = useState([]);
+  const [supplierId, setSupplierId] = useState(null);
+
+
+  const fetchSupplierId = async () => {
+    try {
+      const userJson = localStorage.getItem('user');
+      if (!userJson) {
+        throw new Error('User not found in local storage');
+      }
+      console.log('User JSON:', userJson);
+      const user = JSON.parse(userJson);
+      console.log('Parsed User:', user);
+      const userId = user.User_ID;
+      const response = await axios.get(`http://localhost:8081/supplier/${userId}`);
+      console.log('Supplier data:', response.data);
+      const supplierId = response.data.supplierId; // Update this line
+      console.log('Supplier ID:', supplierId);
+      setSupplierId(supplierId);
+    } catch (error) {
+      console.error('Error fetching supplierId:', error);
+    }
+  };
+  
+  
+  
+  
+  
+
+  useEffect(() => {
+    fetchSupplierId();
+  }, []);
+
+  
+  const fetchSupplierSupplies = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8081/supply/${supplierId}`);
+      console.log('Supply data:', response.data); // Add this line
+      setSupplies(response.data.supplies);
+    } catch (error) {
+      console.error('Error fetching supplies:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (supplierId) {
+      fetchSupplierSupplies();
+    }
+  }, [supplierId]);
+
   return (
     <div>
-      <div><ProfilenavBar/></div>
+      <div>
+        <ProfilenavBar />
+      </div>
 
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
         <h1>Payments</h1>
@@ -14,7 +67,7 @@ function Spayment() {
         <Table striped bordered hover>
           <thead>
             <tr>
-              <th>Order Number</th>
+              <th>Supply Number</th>
               <th>Quantity(kg)</th>
               <th>Date</th>
               <th>Value(Rs)</th>
@@ -22,43 +75,28 @@ function Spayment() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>1</td>
-              <td>12</td>
-              <td>08/20/2023</td>
-              <td>12000</td>
-              <td>
-              <Form>
-      <Form.Check // prettier-ignore
-       disabled
-        type="switch"
-        label="Paid"
-        id="disabled-custom-switch"
-      />
-    </Form>
-              </td>
-            </tr>
-
-
-            <tr>
-              <td>2</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-
-            <tr>
-              <td>3</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-            
-
-
-          </tbody>
+  {supplies.map((supply) => {
+    console.log('Supply:', supply); // Add this line
+    return (
+      <tr key={supply.Supply_ID}>
+        <td>{supply.Supply_ID}</td>
+        <td>{supply.Quantity}</td>
+        <td>{supply.Date}</td>
+        <td>{supply.Payment}</td>
+        <td>
+          <Form>
+            <Form.Check
+              disabled={supply.Payment_Status === 1}
+              type="switch"
+              label="Paid"
+              id="disabled-custom-switch"
+            />
+          </Form>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
         </Table>
       </div>
     </div>
