@@ -1,0 +1,13 @@
+
+.custom-form-container {
+    border: 2px solid #000000; /* Dark black border with 2px thickness */
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #ffffff; /* White background */
+    background-image: url('../assets/cw.jpg');
+   
+  }
+  
+  .custom-form-container h2 {
+    color: #333333; /* Dark gray heading color */
+  }

@@ -18,16 +18,18 @@ function Login() {
         if (res.data.status === "success") {
           // Store entire user object in local storage
           localStorage.setItem('user', JSON.stringify(res.data.user));
-          if (res.data.user.User_Type === 'Supplier') {
-            navigate('/SupplierHome');
-          } else if (res.data.user.User_Type === 'Customer') {
-            navigate('/CusHome');
-          } else if (res.data.user.User_Type === 'Employee') {
-            navigate('/emphome');
-          }
-        } else {
-          setError(res.data.status);
+          if (res.data.user.User_Type === 'Supplier') 
+            {navigate('/SupplierHome');}
+           else if (res.data.user.User_Type === 'Customer') 
+            { navigate('/CusHome');}
+           else if (res.data.user.User_Type === 'Employee') 
+            {navigate('/emphome');}
+           else if (res.data.user.User_Type === 'Admin') 
+            {navigate('/adminhome');}
         }
+         else {
+          setError(res.data.status);
+         }
       })
       .catch(err => {
         console.error(err);
