@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ProfilenavBar from '../../component/ProfilenavBar';
 import { Table, Form } from 'react-bootstrap';
 import axios from 'axios';
+import moment from 'moment';
 
 function Spayment() {
   const [supplies, setSupplies] = useState([]);
@@ -27,16 +28,14 @@ function Spayment() {
       console.error('Error fetching supplierId:', error);
     }
   };
-  
-  
-  
-  
-  
+
 
   useEffect(() => {
     fetchSupplierId();
   }, []);
 
+
+  
   
   const fetchSupplierSupplies = async () => {
     try {
@@ -53,6 +52,8 @@ function Spayment() {
       fetchSupplierSupplies();
     }
   }, [supplierId]);
+
+  
 
   return (
     <div>
@@ -81,18 +82,27 @@ function Spayment() {
       <tr key={supply.Supply_ID}>
         <td>{supply.Supply_ID}</td>
         <td>{supply.Quantity}</td>
-        <td>{supply.Date}</td>
+        <td>{moment(supply.Date).format('MM/DD/YYYY')}</td>
         <td>{supply.Payment}</td>
         <td>
-          <Form>
-            <Form.Check
-              disabled={supply.Payment_Status === 1}
-              type="switch"
-              label="Paid"
-              id="disabled-custom-switch"
-            />
-          </Form>
-        </td>
+          
+        <div style={{
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: supply.Payment_Status === 1 ? "green" : "red",
+    color: "white",
+    padding: "5px",
+    borderRadius: "50%",
+    fontWeight: "bold",
+    width: "24px",
+    height: "24px",
+    marginRight: "10px"
+  }}>
+     
+  </div>
+  <span>{supply.Payment_Status === 1 ? "Paid" : "Unpaid"}</span>
+</td>
+
       </tr>
     );
   })}

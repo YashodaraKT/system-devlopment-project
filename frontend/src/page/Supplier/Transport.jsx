@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProfilenavBar from '../../component/ProfilenavBar';
 import {Button,Form,Table,Offcanvas} from 'react-bootstrap';
+import moment from 'moment';
 
 
 function Transport() {
@@ -167,7 +168,7 @@ function Transport() {
       {appointments.map((appointment) => (
         <tr key={appointment.Appointment_ID}>
           <td>{appointment.Appointment_ID}</td>
-          <td>{appointment.Date}</td>
+          <td>{moment(appointment.Date).format('MM/DD/YYYY')}</td>
           <td>{appointment.No_of_Days}</td>
           <td><td>{appointment.Status === 1 ? 'Approved' : appointment.Status === 0 ? 
           'Pending' : appointment.Status === 10 ? 'Declined' : ''}</td>

@@ -1,15 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProfilenavBar from '../../component/ProfilenavBar';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import Offcanvas from 'react-bootstrap/Offcanvas';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import moment from 'moment';
+import axios from 'axios';
 
-function Orders() {
-  const [showScheduleOrders, setShowScheduleOrders] = useState(false);
-  
+function Orders({ customerId }) {
+  const [orders, setOrders] = useState([]);
 
-  const handleCloseScheduleOrders = () => setShowScheduleOrders(false);
-  const handleShowScheduleOrders = () => setShowScheduleOrders(true);
+  const localizer = momentLocalizer(moment);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get(`/order/${customerId}`);
+        if (response.data && response.data.order) {
+          setOrders(response.data.order);
+        }
+      } catch (error) {
+        console.error('There was an error fetching orders:', error);
+      }
+    };
+
+    if (customerId) {
+      fetchOrders();
+    }
+  }, [customerId]);
+
+  const events = orders.map(order => ({
+    title: order.Order_ID,
+    start: moment(order.Order_Date, 'YYYY-MM-DD HH:mm:ss').toDate(),
+    end: moment(order.Order_Date, 'YYYY-MM-DD HH:mm:ss').toDate(),
+  }));
 
   return (
     <div>
@@ -18,22 +42,43 @@ function Orders() {
         <h1>Orders</h1>
       </div>
 
+      <div style={{ height: 400 }}>
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          eventPropGetter={event => ({
+            style: {
+              backgroundColor: '#ffc107',
+              borderRadius: '0px',
+              opacity: 0.8,
+              color: 'black',
+              border: '0px',
+              display: 'block',
+            },
+          })}
+        />
+      </div>
+      <br />
+      <br />
+
       <div style={{ marginLeft: '60px', border: '1px solid black', padding: '20px', width: 'fit-content' }}>
         <Form>
           <Form.Group className="mb-3" controlId="formBasicType">
-            <Form.Label>Spice Type</Form.Label>
-            <Form.Select aria-label="Default select example" >
-              <option>Open this select menu</option>
-              <option value="1">Cinnamon</option>
-              <option value="2">Pepper</option>
-              <option value="3">Cloves</option>
-              <option value="2">Karunka</option>
+            <Form.Label>Product</Form.Label>
+            <Form.Select aria-label="Default select example">
+              <option>Select the Product</option>
+              <option value="1">A</option>
+              <option value="2">B</option>
+              <option value="3">C</option>
+              <option value="4">D</option>
             </Form.Select>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formBasicDate">
             <Form.Label>Date</Form.Label>
-            <Form.Control type="Date" placeholder="Select the Date" />
+            <Form.Control type="date" placeholder="Select the Date" />
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formBasicTime">
@@ -41,10 +86,9 @@ function Orders() {
             <Form.Control type="number" placeholder="Add the Quantity" />
           </Form.Group>
 
-          <Form.Group className="mb-3" controlId="formBasicTime">
-
+          <Form.Group className="mb-3" controlId="formBasicPreOrderQuantity">
             <Form.Label>Pre-Order Quantity</Form.Label>
-            <Form.Control type="number" placeholder="Add the Quantity" />
+            <Form.Control type="number" placeholder="Add the Pre-Order Quantity" />
           </Form.Group>
 
           <Button variant="primary" type="submit">
@@ -52,25 +96,8 @@ function Orders() {
           </Button>
         </Form>
       </div>
-      <br />
-      <br />
-
-      <div style={{ display: 'inline-block' }}>
-        <Button variant="info" onClick={handleShowScheduleOrders} style={{ marginRight: '30px', marginLeft: '60px' }}>View Schedule Orders</Button>
-        
-      </div>
-
-      <Offcanvas show={showScheduleOrders} onHide={handleCloseScheduleOrders}>
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Schedule Orders</Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          
-        </Offcanvas.Body>
-      </Offcanvas>
-      
     </div>
   );
 }
 
-export default Orders;
+export default Orders;

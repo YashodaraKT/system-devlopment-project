@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Col, Form, Row } from 'react-bootstrap';
+import { Button, Col, Form, Row,Container } from 'react-bootstrap';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -72,8 +72,8 @@ function StaffRegister() {
             </div>
             <br />
             <br />
-            <div className="sup-register-form-container">
-                <Form className="sup-register-form" onSubmit={handleSubmit}>
+            <Container className="sup-register-form-container">
+        <Form className="sup-register-form" onSubmit={handleSubmit}>
                     <Form.Group className="mb-3" id="formGridName">
                         <Form.Label>Name</Form.Label>
                         <Form.Control
@@ -118,8 +118,8 @@ function StaffRegister() {
                         Submit
                     </Button>
                 </Form>
-            </div>
-            <ToastContainer />
+                </Container>
+      <ToastContainer />
         </div>
     );
 }

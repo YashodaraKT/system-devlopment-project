@@ -50,6 +50,31 @@ app.get('/supplier/:userId', (req, res) => {
     return res.json({ supplierId: data[0].Supplier_ID });
   });
 });
+
+app.get('/customer/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const sql = "SELECT Customer_ID FROM Customer WHERE User_ID = ?";
+  
+  db.query(sql, [userId], (err, data) => {
+    if (err) return res.status(500).json({ error: "Internal Server Error" });
+    if (data.length === 0) return res.status(404).json({ error: "Customer not found" });
+    return res.json({ customerId: data[0].Customer_ID });
+  });
+});
+//---------------------------------------------------------------
+app.get('/order/:customerId', (req, res) => {
+  const customerId = req.params.customerId;
+  const sql = "SELECT *, DATE_FORMAT(Order_Date, '%Y-%m-%d %H:%i:%s') AS Order_Date FROM Order WHERE Customer_ID = ? ORDER BY Order_Date";
+
+  db.query(sql, [customerId], (err, data) => {
+    if (err) return res.status(500).json({ error: "Internal Server Error" });
+    if (data.length === 0) return res.status(404).json({ error: "Orders not found" });
+    return res.json({ order: data });
+  });
+});
+
+
+
 //---------------------supplies
 app.get('/supply/:supplierId', (req, res) => {
   const supplierId = req.params.supplierId;
