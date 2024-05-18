@@ -215,6 +215,47 @@ app.post('/change-password', (req, res) => {
     }
   });
 });
+
+//---------------------------------retrive order details-------
+app.get('/customer_order/:customerId', (req, res) => {
+  const customerId = req.params.customerId;
+  const sql = `SELECT o.Order_ID, o.Deliver_Date, o.Payment,
+  GROUP_CONCAT(CONCAT(p.Product_Name, ' - ', oi.Quantity, '  - ', oi.Value, ' ')) AS Products,
+  SUM(oi.Quantity * oi.Value) AS Total_Value
+FROM customer_order o
+JOIN order_item oi ON oi.Order_ID = o.Order_ID
+JOIN product p ON oi.Product_ID = p.Product_ID
+WHERE o.Customer_ID = ?
+GROUP BY o.Order_ID, o.Deliver_Date, o.Payment
+`;
+
+  db.query(sql, [customerId], (err, data) => {
+    if (err) {
+      console.error('Database query error:', err);  // Log error for debugging
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+    if (data.length === 0) {
+      console.log('No orders found for customer ID:', customerId);  // Log no data found
+      return res.status(404).json({ error: "Orders not found" });
+    }
+    console.log('Query result:', data);  // Log the data for debugging
+    console.log(data)
+    return res.json({ orders: data });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 //----------------------------------------------------------------
 
 

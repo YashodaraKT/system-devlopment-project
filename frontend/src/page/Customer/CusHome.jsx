@@ -38,7 +38,7 @@ function CusHome() {
                   <Card.Text>
                   Quickly check past orders and see if they've been paid or are still outstanding.
                   </Card.Text>
-                  <Button onClick ={()=> Navigate("/spayment")} variant="primary">View Details</Button>
+                  <Button onClick ={()=> Navigate("/cpayment")} variant="primary">View Details</Button>
                 </Card.Body>
               </Card>
             </Col>

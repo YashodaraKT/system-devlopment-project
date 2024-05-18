@@ -14,6 +14,7 @@ import SupRegister from './page/Admin/SupRegister';
 import CusRegister from './page/Admin/CusRegister';
 import StaffRegister from './page/Admin/StaffRegister';
 import ChangePW from './page/ChangePW';
+import CusPayment from './page/Customer/CusPayment';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
 <Route path='/SupplierHome' element={<SupplierHome/>}></Route>
 <Route path='/transport' element={<Transport/>}></Route>
 <Route path='/spayment' element={<Spayment/>}></Route>
+<Route path='/cpayment' element={<CusPayment/>}></Route>
 <Route path='/cushome' element={<CusHome/>}></Route>
 <Route path='/emphome' element={<EmployeeHome/>}></Route>
 <Route path='/orders' element={<Orders/>}></Route>
