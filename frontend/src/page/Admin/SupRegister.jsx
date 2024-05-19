@@ -5,71 +5,70 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AdminBar from '../../component/AdminBar';
 
-
 function SupRegister() {
-    
-    const [userName, setUserName] = useState('');
-    const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
-    const [address1, setAddress1] = useState('');
-    const [address2, setAddress2] = useState('');
-    const [contactNumber, setContactNumber] = useState('');
-    const [transport, setTransport] = useState('');
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [address1, setAddress1] = useState('');
+  const [address2, setAddress2] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [transport, setTransport] = useState(0);
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
+    // Form validation: Check if any field is blank
+    if (!userName || !password || !name || !contactNumber || !address1 || !address2 || !transport) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
 
-        // Form validation: Check if any field is blank
-        if (!userName || !password || !name || !contactNumber || !address2 || !address2 || !transport) {
-            toast.error("Please fill in all fields."); // Display error notification
-            return; // Exit function if any field is blank
-        }
+    try {
+      // Send a POST request to create a new user
+      const userResponse = await axios.post('http://localhost:8081/user', {
+        User_Name: userName,
+        User_Type: 'Supplier',
+        Password: password,
+      });
 
+      if (userResponse.status >= 200 && userResponse.status < 300) {
+        // Extract the User_ID from the response
+        const userId = userResponse.data.User_ID;
 
-        try {
-            // Send a POST request to create a new user
-            const userResponse = await axios.post('http://localhost:8081/user', {
-                User_Name: userName,
-                User_Type: 'Supplier',
-                Password: password,
-            });
+        // Send a POST request to create a new supplier, with the retrieved User_ID
+        const supplierResponse = await axios.post('http://localhost:8081/supplier', {
+          Name: name,
+          Contact_Number: contactNumber,
+          Address1: address1,
+          Address2: address2,
+          Transport: transport,
+          User_ID: userId
+        });
 
-            // Extract the User_ID from the response
-            const userId = userResponse.data.User_ID;
+        // Show success notification
+        toast.success("Supplier registered successfully!");
 
-            // Send a POST request to create a new supplier, with the retrieved User_ID
-            const supplierResponse = await axios.post('http://localhost:8081/supplier', {
-                Name: name,
-                Contact_Number: contactNumber,
-                Address1: address1,
-                Address2: address2,
-                Transport: transport,
-                User_ID: userId
-            });
+        // Clear form fields
+        clearForm();
+      } else {
+        toast.error("Error registering user. Please try again.");
+      }
+    } catch (error) {
+      // Show error notification
+      toast.error("Error registering supplier. Please try again.");
+      console.error('Error:', error.response.data);
+    }
+  };
 
-            // Show success notification
-            toast.success("Supplier registered successfully!");
-
-            // Clear form fields
-            clearForm();
-        } catch (error) {
-            // Show error notification
-            toast.error("Error registering supplier. Please try again.");
-            console.error('Error:', error.response.data);
-        }
-    };
-
-    const clearForm = () => {
-        setUserName('');
-        setPassword('');
-        setName('');
-        setContactNumber('');
-        setAddress1('');
-        setAddress2('');
-        setTransport('');
-    };
-
+  const clearForm = () => {
+    setUserName('');
+    setPassword('');
+    setName('');
+    setContactNumber('');
+    setAddress1('');
+    setAddress2('');
+    setTransport('');
+  };
     return (
         <div>
                <div><AdminBar/></div>
@@ -144,19 +143,22 @@ function SupRegister() {
                     </Row>
                     
                     <Form.Group className="mb-3" id="formGridName">
-                        <Form.Label>Branch</Form.Label>
-                        <Form.Control
-                            type="Text"
-                            placeholder="Enter the Trnsport"
-                            value={transport}
-                            onChange={(e) => setTransport(e.target.value)}
-                        />
-                    </Form.Group>
+                    <Form.Label>Transport</Form.Label>
+  <Form.Select
+    value={transport}
+    onChange={(e) => setTransport(e.target.value === "1" ? 1 : 0)}
+  >
+    <option value="">Select an option</option>
+    <option value="1">Yes</option>
+    <option value="0">No</option>
+  </Form.Select>
+</Form.Group>
+                    
                     <Button variant="primary" type="submit">
                         Submit
                     </Button>
                 </Form>
-                </Container>
+                </Container>  
       <ToastContainer />
            
         </div>

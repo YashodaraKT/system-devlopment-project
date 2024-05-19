@@ -15,6 +15,10 @@ import CusRegister from './page/Admin/CusRegister';
 import StaffRegister from './page/Admin/StaffRegister';
 import ChangePW from './page/ChangePW';
 import CusPayment from './page/Customer/CusPayment';
+import ViewAppointment from './page/Admin/ViewAppointment';
+import ViewOrders from './page/Admin/ViewOrders';
+import NewOrders from './page/Admin/NewOrders';
+
 
 function App() {
   return (
@@ -35,6 +39,9 @@ function App() {
 <Route path='/cusregister' element={<CusRegister/>}></Route>
 <Route path='/staffregister' element={<StaffRegister/>}></Route>
 <Route path='/changepw' element={<ChangePW/>}></Route>
+<Route path='/viewappointment' element={<ViewAppointment/>}></Route>
+<Route path='/vieworders' element={<ViewOrders/>}></Route>
+<Route path='/neworders' element={<NewOrders/>}></Route>
 </Routes>
 
 

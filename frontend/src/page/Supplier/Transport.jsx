@@ -161,7 +161,7 @@ function Transport() {
         <th>Appointment ID</th>
         <th>Date</th>
         <th>No. of Days</th>
-        <th>Status</th>
+        <th>Approval</th>
       </tr>
     </thead>
     <tbody>
@@ -170,8 +170,8 @@ function Transport() {
           <td>{appointment.Appointment_ID}</td>
           <td>{moment(appointment.Date).format('MM/DD/YYYY')}</td>
           <td>{appointment.No_of_Days}</td>
-          <td><td>{appointment.Status === 1 ? 'Approved' : appointment.Status === 0 ? 
-          'Pending' : appointment.Status === 10 ? 'Declined' : ''}</td>
+          <td><td>{appointment.Approval === 1 ? 'Approved' : appointment.Approval === 10 ? 
+          'Pending' : appointment.Approval === 0 ? 'Declined' : ''}</td>
 </td>
         </tr>
       ))}

@@ -20,6 +20,13 @@ function BasicExample() {
               <NavDropdown.Item href="/cusregister">Customer</NavDropdown.Item>
               <NavDropdown.Item href="/staffregister">Staff</NavDropdown.Item>
             </NavDropdown>
+            <Nav.Link href="/viewappointment">Appointment</Nav.Link>
+            <NavDropdown title="Orders" id="basic-nav-dropdown">
+            <NavDropdown.Item href="/neworders">Pending Orders</NavDropdown.Item>
+            <NavDropdown.Item href="/vieworders">Approved Orders</NavDropdown.Item>
+          
+            </NavDropdown>
+
           </Nav>
         </Navbar.Collapse>
       </Container>

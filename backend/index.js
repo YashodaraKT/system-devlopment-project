@@ -140,12 +140,13 @@ app.post('/user', async (req, res) => {
 });
 
 //-------------------- Register Supplier
+
 app.post('/supplier', async (req, res) => {
-  const { Name, Address1, Address2, Contact_Number, Transport } = req.body;
+  const { Name, Address1, Address2, Contact_Number, Transport, User_ID } = req.body;
   try {
     const result = await db.query(
-      'INSERT INTO supplier (Name, Address1, Address2, Contact_Number, Transport, User_ID) VALUES (?, ?, ?, ?, ?, LAST_INSERT_ID())',
-      [Name, Address1, Address2, Contact_Number, Transport]
+      'INSERT INTO supplier (Name, Address1, Address2, Contact_Number, Transport, User_ID) VALUES (?, ?, ?, ?, ?, LAST_INSERT_ID() )',
+      [Name, Address1, Address2, Contact_Number, Transport, User_ID]
     );
 
     res.status(201).send("Supplier registered successfully");
@@ -154,6 +155,8 @@ app.post('/supplier', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+
 
 
 //-------------------- Register Customer
@@ -244,11 +247,111 @@ GROUP BY o.Order_ID, o.Deliver_Date, o.Payment
   });
 });
 
+// Create an appointment
+app.post('/appointment', (req, res) => {
+  const { Supplier_ID, Date, No_of_Days, App_Value } = req.body;
+  const query = 'INSERT INTO appointment (Supplier_ID, Date, No_of_Days, Approval) VALUES (?, ?, ?, ?)';
+  db.query(query, [Supplier_ID, Date, No_of_Days, Approval], (err, result) => {
+    if (err) throw err;
+    res.send({ success: true, appointmentId: result.insertId });
+  });
+});
 
+//View Appointment
+app.get('/view_appointment', (req, res) => {
+  const query = `
+  SELECT a.Appointment_ID, a.Supplier_ID, a.Date, a.Status, a.No_of_Days, 
+         s.Name, s.Address1, s.Address2, s.Location_Id 
+  FROM appointment a 
+  JOIN supplier s ON a.Supplier_ID = s.Supplier_ID
+`;
 
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      res.status(500).send(err);
+      
+    } else {
+      res.json(results);
+    }
+  });
+});
 
+//-----------------------View Approved Orders-----
+app.get('/customer_orders', (req, res) => {
+  const sql = `SELECT customer_order.Order_ID, customer_order.Customer_ID, approved_order.Payment, approved_order.Payment_Status, customer_order.Order_Date, customer_order.Deliver_Date, customer.Name, customer.Contact_Number,
+  GROUP_CONCAT(CONCAT_WS(' - ', product.Product_Name, order_item.Quantity, order_item.Value) SEPARATOR ',\n') as 'Product Details'
+FROM customer_order
+INNER JOIN customer ON customer_order.Customer_ID = customer.Customer_ID
+LEFT JOIN order_item ON customer_order.Order_ID = order_item.Order_ID
+LEFT JOIN approved_order ON customer_order.Order_ID = approved_order.Order_ID
+LEFT JOIN product ON order_item.Product_ID = product.Product_ID
+WHERE customer_order.Approval = 1
+GROUP BY customer_order.Order_ID;`;
 
+  db.query(sql, (err, data) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+    console.log('Query result:', data);
+    return res.json({ orders: data });
+  });
+});
 
+// Update payment status
+app.put('/approved_payments/:orderId', (req, res) => {
+  const orderId = req.params.orderId;
+  const paymentStatus = req.body.Payment_Status;
+
+  const sql = `UPDATE approved_order SET Payment_Status = ? WHERE Order_ID = ?`;
+
+  db.query(sql, [paymentStatus, orderId], (err, result) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+    console.log('Payment status updated:', result);
+    return res.json({ message: 'Payment status updated' });
+  });
+});
+
+//-----------------------View pendingOrders-----
+app.get('/pending_orders', (req, res) => {
+  const sql = `SELECT customer_order.Order_ID, customer_order.Customer_ID,  customer_order.Order_Date, customer_order.Deliver_Date, customer.Name, customer.Contact_Number,
+  GROUP_CONCAT(CONCAT_WS(' - ', product.Product_Name, order_item.Quantity, order_item.Value) SEPARATOR ',\n') as 'Product Details'
+FROM customer_order
+INNER JOIN customer ON customer_order.Customer_ID = customer.Customer_ID
+LEFT JOIN order_item ON customer_order.Order_ID = order_item.Order_ID
+LEFT JOIN product ON order_item.Product_ID = product.Product_ID
+WHERE customer_order.Approval = 10
+GROUP BY customer_order.Order_ID;`;
+
+  db.query(sql, (err, data) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+    console.log('Query result:', data);
+    return res.json({ orders: data });
+  });
+});
+// Endpoint to approve or decline an order
+app.put("/Approval_orders/:orderId", (req, res) => {
+  const orderId = req.params.orderId;
+  const { Approval } = req.body;
+
+  const sql = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+
+  db.query(sql, [Approval, orderId], (err, result) => {
+    if (err) {
+      console.error("Error updating order:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+    console.log("Order updated:", result);
+    return res.json({ message: "Order updated successfully" });
+  });
+});
 
 
 

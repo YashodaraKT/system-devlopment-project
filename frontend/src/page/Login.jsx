@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from 'react-bootstrap';
-import backgroundImage from '../assets/login.jpg';
 import { useNavigate } from 'react-router-dom';
 import '../css/Login.css'; 
 import axios from "axios";
+import cw from '../assets/cw.jpg'; 
 
 function Login() {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ function Login() {
   
   const Navigate= useNavigate();
   return (
-    <div className='logsignup-container' style={{backgroundImage: `url(${backgroundImage})`}}>
+    <div className='logsignup-container' >
       <div className='logsignup-form'>
         <form onSubmit={handleSubmit}>
           <h1>Login</h1>
@@ -59,6 +59,9 @@ function Login() {
         </form>
         {error && <div className="error-message">Error: {error.message}</div>}
       </div>
+      <div className='logsignup-image'>
+      <img src={cw} alt='loginimage' />
+    </div>
     </div>
   );
 }
