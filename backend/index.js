@@ -222,14 +222,15 @@ app.post('/change-password', (req, res) => {
 //---------------------------------retrive order details-------
 app.get('/customer_order/:customerId', (req, res) => {
   const customerId = req.params.customerId;
-  const sql = `SELECT o.Order_ID, o.Deliver_Date, o.Payment,
+  const sql = `SELECT o.Order_ID, o.Deliver_Date, ao.Payment,
   GROUP_CONCAT(CONCAT(p.Product_Name, ' - ', oi.Quantity, '  - ', oi.Value, ' ')) AS Products,
   SUM(oi.Quantity * oi.Value) AS Total_Value
 FROM customer_order o
 JOIN order_item oi ON oi.Order_ID = o.Order_ID
+JOIN approved_order ao ON ao.Order_ID = o.Order_ID
 JOIN product p ON oi.Product_ID = p.Product_ID
 WHERE o.Customer_ID = ?
-GROUP BY o.Order_ID, o.Deliver_Date, o.Payment
+GROUP BY o.Order_ID, o.Deliver_Date, ao.Payment
 `;
 
   db.query(sql, [customerId], (err, data) => {
@@ -260,22 +261,22 @@ app.post('/appointment', (req, res) => {
 //View Appointment
 app.get('/view_appointment', (req, res) => {
   const query = `
-  SELECT a.Appointment_ID, a.Supplier_ID, a.Date, a.Status, a.No_of_Days, 
-         s.Name, s.Address1, s.Address2, s.Location_Id 
-  FROM appointment a 
-  JOIN supplier s ON a.Supplier_ID = s.Supplier_ID
-`;
+    SELECT a.Appointment_ID, a.Supplier_ID, a.Date, a.Status, a.No_of_Days,
+           s.Name, s.Address1, s.Address2, s.Location_Id
+    FROM appointment a
+    JOIN supplier s ON a.Supplier_ID = s.Supplier_ID
+  `;
 
   connection.query(query, (err, results) => {
     if (err) {
       console.error('Database query error:', err);
       res.status(500).send(err);
-      
     } else {
       res.json(results);
     }
   });
 });
+
 
 //-----------------------View Approved Orders-----
 app.get('/customer_orders', (req, res) => {
@@ -336,24 +337,103 @@ GROUP BY customer_order.Order_ID;`;
     return res.json({ orders: data });
   });
 });
-// Endpoint to approve or decline an order
+// ------------------------------------Endpoint to approve or decline an order
 app.put("/Approval_orders/:orderId", (req, res) => {
   const orderId = req.params.orderId;
   const { Approval } = req.body;
 
-  const sql = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+  // Calculate the total payment for the order
+  const sqlGetPayment = `SELECT SUM(Value) AS TotalPayment FROM order_item WHERE Order_ID = ?`;
 
-  db.query(sql, [Approval, orderId], (err, result) => {
+  db.query(sqlGetPayment, [orderId], (err, results) => {
     if (err) {
-      console.error("Error updating order:", err);
+      console.error("Error calculating payment:", err);
       return res.status(500).json({ error: "Internal Server Error" });
     }
-    console.log("Order updated:", result);
-    return res.json({ message: "Order updated successfully" });
+
+    const totalPayment = results[0].TotalPayment;
+
+    if (Approval === 1) {
+      // Insert a new record into the approved_order table
+      const sqlInsertApproved = `INSERT INTO approved_order (Order_ID, Payment) VALUES (?, ?)`;
+
+      db.query(sqlInsertApproved, [orderId, totalPayment], (err, result) => {
+        if (err) {
+          console.error("Error inserting into approved_order:", err);
+          return res.status(500).json({ error: "Internal Server Error" });
+        }
+        console.log("Record inserted into approved_order:", result);
+      });
+    }
+
+    // Update the customer_order table
+    const sqlUpdateOrder = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+
+    db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
+      if (err) {
+        console.error("Error updating order:", err);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+      console.log("Order updated:", result);
+      return res.json({ message: "Order updated successfully" });
+    });
   });
 });
 
 
+//---------------get Productname
+app.get('/products', (req, res) => {
+  const sql = 'SELECT  Product_Name,Selling_Price FROM product';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Error fetching products:', err);
+      res.status(500).json({ error: 'Failed to fetch products' });
+    } else {
+      res.json(result);
+    }
+  });
+});
+
+//---------------------------
+
+app.post('/customer_order', async (req, res) => {
+  try {
+    const { Customer_ID, Deliver_Date, orderItems } = req.body;
+    const Order_Date = moment().format('YYYY-MM-DD');
+
+    const insertOrderQuery = 'INSERT INTO customer_order (Customer_ID, Order_Date, Deliver_Date) VALUES (?, ?, ?)';
+    const insertOrderItemQuery = 'INSERT INTO order_item (Order_ID, Product_ID, Quantity, Value) VALUES (?, ?, ?, ?)';
+
+    const orderResult = await new Promise((resolve, reject) => {
+      db.query(insertOrderQuery, [Customer_ID, Order_Date, Deliver_Date], (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+
+    const Order_ID = orderResult.insertId;
+    const orderItemPromises = orderItems.map(item => {
+      return new Promise((resolve, reject) => {
+        db.query(insertOrderItemQuery, [Order_ID, item.Product_ID, item.Quantity, item.Value], (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    });
+
+    await Promise.all(orderItemPromises);
+    res.status(200).json({ message: 'Order placed successfully!' });
+  } catch (error) {
+    console.error('Error placing order:', error);
+    res.status(500).json({ error: 'Failed to place order' });
+  }
+});
 
 
 

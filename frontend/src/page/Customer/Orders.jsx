@@ -12,8 +12,13 @@ function CusPayment() {
   const [events, setEvents] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-
+  const [products, setProducts] = useState([]);
+  const [formFields, setFormFields] = useState([{ product: '', quantity: '' }]);
+  const [ordervalue, setOrderValue] = useState(0);
+  const [deliverDate, setDeliverDate] = useState('');
   const localizer = momentLocalizer(moment);
+
+  //-------------------------------------------------------------------------------
 
   const fetchCustomerId = async () => {
     try {
@@ -30,7 +35,7 @@ function CusPayment() {
       console.error('Error fetching customerId:', error);
     }
   };
-
+//------------------------------------------------------------------------------
   useEffect(() => {
     fetchCustomerId();
   }, []);
@@ -66,6 +71,7 @@ function CusPayment() {
       fetchCustomerOrders();
     }
   }, [customerId]);
+//****************************************************************************** */
 
   const handleEventClick = event => {
     setSelectedOrder(event.order);
@@ -73,7 +79,80 @@ function CusPayment() {
   };
 
   const handleClose = () => setShowModal(false);
+//----------------------------------------------------------------------------------
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:8081/products');
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
 
+    fetchProducts();
+  }, []);
+
+//----------------------------------------------------------------------------
+
+  const addFormField = () => {
+    setFormFields([...formFields, { product: '', quantity: '' }]);
+  };
+
+  const handleFormChange = (index, event) => {
+    const updatedFields = formFields.map((field, i) => 
+      i === index ? { ...field, [event.target.name]: event.target.value } : field
+    );
+    setFormFields(updatedFields);
+    calculateOrderValue(updatedFields);
+  };
+
+  //****************************************************************************************** */
+
+
+  const calculateOrderValue = (fields) => {
+    let total = 0;
+    fields.forEach(field => {
+      const product = products.find(p => p.Product_Name === field.product);
+      if (product && field.quantity) {
+        total += product.Selling_Price * field.quantity;
+      }
+    });
+    setOrderValue(total);
+  };
+//------------------------------------------------------------------------------------
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const orderDate = moment().format('YYYY-MM-DD');
+    try {
+      const orderItems = formFields.map(field => {
+        const product = products.find(p => p.Product_Name === field.product);
+        return {
+          Product_ID: product.Product_ID,
+          Quantity: field.quantity,
+          Value: field.quantity * product.Selling_Price,
+        };
+      });
+
+      const orderData = {
+        Customer_ID: customerId,
+        Order_Date: orderDate,
+        Deliver_Date: deliverDate,
+        orderItems: orderItems,
+      };
+
+      console.log('Order data:', orderData);
+      await axios.post('http://localhost:8081/customer_order', orderData);
+      alert('Order placed successfully!');
+      setFormFields([{ product: '', quantity: '' }]);
+      setDeliverDate('');
+      setOrderValue(0);
+      fetchCustomerOrders();
+    } catch (error) {
+      console.error('Error submitting order:', error);
+    }
+  };
+//**************************************************************************************** */
   return (
     <div>
       <div>
@@ -85,6 +164,7 @@ function CusPayment() {
       </div>
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
         <h2>Delivery Calendar</h2>
+
         <div style={{ border: '1px solid gray', padding: '10px', borderRadius: '5px' }}>
           <Calendar
             localizer={localizer}
@@ -95,6 +175,8 @@ function CusPayment() {
             onSelectEvent={handleEventClick}
           />
         </div>
+
+
       </div>
 
       {selectedOrder && (
@@ -129,37 +211,63 @@ function CusPayment() {
       )}
 
       <div style={{ marginLeft: '60px', border: '1px solid black', padding: '20px', width: 'fit-content' }}>
-        <Form>
-          <Form.Group className="mb-3" controlId="formBasicType">
-            <Form.Label>Product</Form.Label>
-            <Form.Select aria-label="Default select example">
-              <option>Select the Product</option>
-              <option value="1">A</option>
-              <option value="2">B</option>
-              <option value="3">C</option>
-              <option value="4">D</option>
-            </Form.Select>
-          </Form.Group>
+        <Form onSubmit={handleSubmit}>
+          {formFields.map((field, index) => (
+            <div key={index} className="d-flex flex-row align-items-center mb-3">
+              <Form.Group className="flex-fill" controlId={`formBasicType${index}`}>
+                <Form.Label>Product</Form.Label>
+                <Form.Select 
+                  name="product"
+                  value={field.product}
+                  onChange={(e) => handleFormChange(index, e)}
+                >
+                  <option>Select the Product</option>
+                  {products.map((product) => (
+                    <option key={product.Product_Name} value={product.Product_Name}>
+                      {product.Product_Name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+
+              <Form.Group className="flex-fill ms-3" controlId={`formBasicTime${index}`}>
+                <Form.Label>Quantity</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="quantity"
+                  placeholder="Add the Quantity"
+                  value={field.quantity}
+                  onChange={(e) => handleFormChange(index, e)}
+                />
+              </Form.Group>
+
+              {index === formFields.length - 1 && (
+                <Button variant="info" onClick={addFormField} className="ms-2">
+                  +
+                </Button>
+              )}
+            </div>
+          ))}
 
           <Form.Group className="mb-3" controlId="formBasicDate">
             <Form.Label>Date</Form.Label>
-            <Form.Control type="date" placeholder="Select the Date" />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="formBasicTime">
-            <Form.Label>Quantity</Form.Label>
-            <Form.Control type="number" placeholder="Add the Quantity" />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="formBasicPreOrderQuantity">
-            <Form.Label>Pre-Order Quantity</Form.Label>
-            <Form.Control type="number" placeholder="Add the Pre-Order Quantity" />
+            <Form.Control 
+              type="date"
+              placeholder="Select the Date" 
+              value={deliverDate}
+              onChange={(e) => setDeliverDate(e.target.value)}
+              required
+            />
           </Form.Group>
 
           <Button variant="primary" type="submit">
             Submit
           </Button>
         </Form>
+
+        <div style={{ marginTop: '20px' }}>
+          <h3>Order Value: Rs {ordervalue.toFixed(2)}</h3>
+        </div>
       </div>
     </div>
   );

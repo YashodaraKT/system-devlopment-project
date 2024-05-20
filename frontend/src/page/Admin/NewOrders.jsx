@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button } from "react-bootstrap";
+import { Table, Button, Form } from "react-bootstrap";
 import axios from "axios";
 import moment from "moment";
 
 function NewOrders() {
   const [orders, setOrders] = useState([]);
+  const [selectedOrders, setSelectedOrders] = useState([]);
 
   const fetchPendingOrders = async () => {
     try {
@@ -22,7 +23,7 @@ function NewOrders() {
 
   const handleApprove = async (orderId) => {
     try {
-      const response = await axios.put(`http://localhost:8081/customer_orders/${orderId}`, {
+      const response = await axios.put(`http://localhost:8081/Approval_orders/${orderId}`, {
         Approval: 1,
       });
       console.log("Order approved:", response.data);
@@ -36,7 +37,7 @@ function NewOrders() {
 
   const handleDecline = async (orderId) => {
     try {
-      const response = await axios.put(`http://localhost:8081/customer_orders/${orderId}`, {
+      const response = await axios.put(`http://localhost:8081/Approval_orders/${orderId}`, {
         Approval: 0,
       });
       console.log("Order declined:", response.data);
@@ -45,6 +46,39 @@ function NewOrders() {
       setOrders((prevOrders) => prevOrders.filter((order) => order.Order_ID !== orderId));
     } catch (error) {
       console.error("Error declining order:", error);
+    }
+  };
+
+  const handleSelectOrder = (orderId, isApproved) => {
+    setSelectedOrders((prevSelectedOrders) => {
+      const index = prevSelectedOrders.findIndex((order) => order.orderId === orderId);
+
+      if (index === -1) {
+        // Add new order to selected orders
+        return [...prevSelectedOrders, { orderId, isApproved }];
+      } else {
+        // Update existing order in selected orders
+        const updatedOrders = [...prevSelectedOrders];
+        updatedOrders[index] = { orderId, isApproved };
+        return updatedOrders;
+      }
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      for (const order of selectedOrders) {
+        if (order.isApproved) {
+          await handleApprove(order.orderId);
+        } else {
+          await handleDecline(order.orderId);
+        }
+      }
+
+      // Clear selected orders
+      setSelectedOrders([]);
+    } catch (error) {
+      console.error("Error submitting orders:", error);
     }
   };
 
@@ -83,11 +117,21 @@ function NewOrders() {
                 <td>{moment(customer_order.Order_Date).format("MM/DD/YYYY")}</td>
                 <td>{moment(customer_order.Deliver_Date).format("MM/DD/YYYY")}</td>
                 <td>
-                  <input type="checkbox" onClick={() => handleApprove(customer_order.Order_ID)} /> Accept <br />
-                  <input type="checkbox" onClick={() => handleDecline(customer_order.Order_ID)} /> Decline
+                  <Form.Check
+                    type="checkbox"
+                    label="Accept"
+                    checked={selectedOrders.some((order) => order.orderId === customer_order.Order_ID && order.isApproved)}
+                    onChange={() => handleSelectOrder(customer_order.Order_ID, true)}
+                  />
+                  <Form.Check
+                    type="checkbox"
+                    label="Decline"
+                    checked={selectedOrders.some((order) => order.orderId === customer_order.Order_ID && !order.isApproved)}
+                    onChange={() => handleSelectOrder(customer_order.Order_ID, false)}
+                  />
                 </td>
                 <td>
-                  <Button onClick={() => handleApprove(customer_order.Order_ID)}>Submit</Button>
+                  <Button onClick={handleSubmit}>Submit</Button>
                 </td>
               </tr>
             ))}
