@@ -142,11 +142,11 @@ app.post('/user', async (req, res) => {
 //-------------------- Register Supplier
 
 app.post('/supplier', async (req, res) => {
-  const { Name, Address1, Address2, Contact_Number, Transport, User_ID } = req.body;
+  const { Name, Address1, Address2, Contact_Number, Transport, User_ID,Location_Id } = req.body;
   try {
     const result = await db.query(
-      'INSERT INTO supplier (Name, Address1, Address2, Contact_Number, Transport, User_ID) VALUES (?, ?, ?, ?, ?, LAST_INSERT_ID() )',
-      [Name, Address1, Address2, Contact_Number, Transport, User_ID]
+      'INSERT INTO supplier (Name, Address1, Address2, Contact_Number, Transport,Location_Id, User_ID) VALUES (?, ?, ?, ?, ?,?, LAST_INSERT_ID() )',
+      [Name, Address1, Address2, Contact_Number, Transport, Location_Id,User_ID]
     );
 
     res.status(201).send("Supplier registered successfully");
@@ -260,20 +260,41 @@ app.post('/appointment', (req, res) => {
 
 //View Appointment
 app.get('/view_appointment', (req, res) => {
-  const query = `
-    SELECT a.Appointment_ID, a.Supplier_ID, a.Date, a.Status, a.No_of_Days,
-           s.Name, s.Address1, s.Address2, s.Location_Id
-    FROM appointment a
-    JOIN supplier s ON a.Supplier_ID = s.Supplier_ID
+  let sql = `
+    SELECT 
+      appointment.Appointment_ID, 
+      appointment.Supplier_ID, 
+      appointment.Date, 
+      appointment.Status, 
+      supplier.Name,
+      supplier.Address1,
+      supplier.Address2,
+      location.Location_Name
+    FROM 
+      appointment 
+    JOIN 
+      supplier 
+    ON 
+      appointment.Supplier_ID = supplier.Supplier_ID
+    JOIN
+      location
+    ON
+      supplier.Location_Id = location.Location_Id
   `;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Database query error:', err);
-      res.status(500).send(err);
-    } else {
-      res.json(results);
-    }
+//Approved appointment
+
+app.post('/update_appointment', (req, res) => {
+  const { appointmentId, approval } = req.body;
+  let sql = `UPDATE appointment SET Approval = ? WHERE Appointment_ID = ?`;
+  db.query(sql, [approval, appointmentId], (err, result) => {
+    if (err) throw err;
+    res.send({ message: 'Appointment updated successfully' });
   });
 });
 
@@ -435,13 +456,122 @@ app.post('/customer_order', async (req, res) => {
   }
 });
 
+//----------view supplier
+
+app.get('/viewsupplier', (req, res) => {
+  db.query('SELECT * FROM supplier', (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+//----------view customer
+
+app.get('/viewcustomer', (req, res) => {
+  db.query('SELECT * FROM customer', (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+//----------view staff
+
+app.get('/viewstaff', (req, res) => {
+  db.query('SELECT * FROM staff', (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+
+
+//-------------------------Spayment View---------------------------------------
+app.get('/supplier_payments', (req, res) => {
+  const query = `
+    SELECT s.Supply_ID, s.Supplier_ID, su.Name, su.Contact_Number, s.Date, s.Payment, s.Payment_Status
+    FROM supply AS s
+    INNER JOIN supplier AS su ON s.Supplier_ID = su.Supplier_ID
+  `;
+
+  db.query(query, (err, result) => {
+    if (err) {
+      res.status(500).send({ message: err.message });
+    } else {
+      res.send({ supplies: result });
+    }
+  });
+});
+//-------------------------Spayment done---------------------------------------
+app.put('/approved_supplier_payments/:id', (req, res) => {
+  const supplyId = req.params.id;
+  const { Payment_Status } = req.body;
+
+  const query = `
+    UPDATE supply
+    SET Payment_Status = ?
+    WHERE Supply_ID = ?
+  `;
+
+  db.query(query, [Payment_Status, supplyId], (err, result) => {
+    if (err) {
+      res.status(500).send({ message: err.message });
+    } else {
+      res.send({ message: 'Payment status updated successfully.' });
+    }
+  });
+});
+//---------------------------------------------------
+app.get('/find_supplier', (req, res) => {
+  const { name, contact } = req.query;
+  const query = `
+    SELECT Supplier_ID
+    FROM supplier
+    WHERE Name = ? AND Contact_Number = ?
+  `;
+  db.query(query, [name, contact], (err, result) => {
+    if (err) {
+      res.status(500).send({ message: err.message });
+    } else {
+      if (result.length > 0) {
+        res.send({ supplier: result[0] });
+      } else {
+        // If supplier not found
+        console.log('Supplier not found');
+        res.status(404).send({ message: "Supplier not found" });
+      }
+    }
+  });
+});
+
+
+
+app.post('/add_supply', (req, res) => {
+  const { Supplier_ID, Quantity, Payment, Date } = req.body;
+  const query = `
+    INSERT INTO supply (Supplier_ID, Quantity, Payment, Date, Payment_Status)
+    VALUES (?, ?, ?, ?, 0)
+  `;
+  db.query(query, [Supplier_ID, Quantity, Payment, Date], (err, result) => {
+    if (err) {
+      res.status(500).send({ message: err.message });
+    } else {
+      res.send({ message: 'Supply added successfully.' });
+    }
+  });
+});
 
 
 
 
-//----------------------------------------------------------------
 
 
+//-------------------------------------------
 app.listen(8081,()=>{
     console.log ("listening...")
 })

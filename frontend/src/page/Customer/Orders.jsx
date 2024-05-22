@@ -3,22 +3,18 @@ import ProfilenavBar from '../../component/ProfilenavBar';
 import { Modal, Button, Form } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import CustomerCalendar from '../../component/CustomerCalendar';
 
 function CusPayment() {
-  const [orders, setOrders] = useState([]);
-  const [customerId, setCustomerId] = useState(null);
-  const [events, setEvents] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
   const [products, setProducts] = useState([]);
   const [formFields, setFormFields] = useState([{ product: '', quantity: '' }]);
   const [ordervalue, setOrderValue] = useState(0);
   const [deliverDate, setDeliverDate] = useState('');
-  const localizer = momentLocalizer(moment);
+  const [customerId, setCustomerId] = useState(null); // Add this line
+  const [showCalendar, setShowCalendar] = useState(false);
 
-  //-------------------------------------------------------------------------------
+  const handleShowCalendar = () => setShowCalendar(true);
+  const handleCloseCalendar = () => setShowCalendar(false);
 
   const fetchCustomerId = async () => {
     try {
@@ -35,52 +31,14 @@ function CusPayment() {
       console.error('Error fetching customerId:', error);
     }
   };
-//------------------------------------------------------------------------------
-  useEffect(() => {
-    fetchCustomerId();
-  }, []);
 
   const fetchCustomerOrders = async () => {
-    try {
-      const response = await axios.get(`http://localhost:8081/customer_order/${customerId}`);
-      console.log('Order data:', response.data);
-      setOrders(response.data.orders);
-      const eventsData = response.data.orders.map(order => {
-        const products = order.Products.split(',').map(item => {
-          const [name, qty, value] = item.split(' - ');
-          return `${name} (${qty}, Rs ${value})`;
-        }).join(', ');
-
-        return {
-          title: `Order ${order.Order_ID}`,
-          details: `Products: ${products} | Total: Rs ${order.Payment}`,
-          start: new Date(order.Deliver_Date),
-          end: new Date(order.Deliver_Date),
-          allDay: true,
-          order,
-        };
-      });
-      setEvents(eventsData);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
+    // Implement fetchCustomerOrders function
   };
 
   useEffect(() => {
-    if (customerId) {
-      fetchCustomerOrders();
-    }
-  }, [customerId]);
-//****************************************************************************** */
+    fetchCustomerId(); // Call fetchCustomerId on component mount
 
-  const handleEventClick = event => {
-    setSelectedOrder(event.order);
-    setShowModal(true);
-  };
-
-  const handleClose = () => setShowModal(false);
-//----------------------------------------------------------------------------------
-  useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get('http://localhost:8081/products');
@@ -93,22 +51,17 @@ function CusPayment() {
     fetchProducts();
   }, []);
 
-//----------------------------------------------------------------------------
-
   const addFormField = () => {
     setFormFields([...formFields, { product: '', quantity: '' }]);
   };
 
   const handleFormChange = (index, event) => {
-    const updatedFields = formFields.map((field, i) => 
+    const updatedFields = formFields.map((field, i) =>
       i === index ? { ...field, [event.target.name]: event.target.value } : field
     );
     setFormFields(updatedFields);
     calculateOrderValue(updatedFields);
   };
-
-  //****************************************************************************************** */
-
 
   const calculateOrderValue = (fields) => {
     let total = 0;
@@ -120,7 +73,7 @@ function CusPayment() {
     });
     setOrderValue(total);
   };
-//------------------------------------------------------------------------------------
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const orderDate = moment().format('YYYY-MM-DD');
@@ -128,7 +81,7 @@ function CusPayment() {
       const orderItems = formFields.map(field => {
         const product = products.find(p => p.Product_Name === field.product);
         return {
-          Product_ID: product.Product_ID,
+          Product_Name: product.Product_Name,
           Quantity: field.quantity,
           Value: field.quantity * product.Selling_Price,
         };
@@ -152,9 +105,29 @@ function CusPayment() {
       console.error('Error submitting order:', error);
     }
   };
-//**************************************************************************************** */
+
   return (
     <div>
+      <div>
+        <Button variant="primary" onClick={handleShowCalendar}>
+          Show Customer Calendar
+        </Button>
+
+        <Modal show={showCalendar} onHide={handleCloseCalendar} size="lg">
+          <Modal.Header closeButton>
+            <Modal.Title>Customer Calendar</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <CustomerCalendar />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseCalendar}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </div>
+
       <div>
         <ProfilenavBar />
       </div>
@@ -162,53 +135,6 @@ function CusPayment() {
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
         <h1>Orders</h1>
       </div>
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <h2>Delivery Calendar</h2>
-
-        <div style={{ border: '1px solid gray', padding: '10px', borderRadius: '5px' }}>
-          <Calendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: 500, width: '80vw' }}
-            onSelectEvent={handleEventClick}
-          />
-        </div>
-
-
-      </div>
-
-      {selectedOrder && (
-        <Modal show={showModal} onHide={handleClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>Order Details</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <div style={{ border: '1px solid gray', padding: '10px', borderRadius: '5px' }}>
-              <p><strong>Order ID:</strong> {selectedOrder.Order_ID}</p>
-              <p><strong>Products:</strong></p>
-              <ul>
-                {selectedOrder.Products.split(',').map((item, index) => {
-                  const [name, qty, value] = item.split(' - ');
-                  return (
-                    <li key={index}>
-                      {name} - {qty} (kg), Rs {value}
-                    </li>
-                  );
-                })}
-              </ul>
-              <p><strong>Total Payment:</strong> Rs {selectedOrder.Payment}</p>
-              <p><strong>Deliver Date:</strong> {moment(selectedOrder.Deliver_Date).format('MM/DD/YYYY')}</p>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      )}
 
       <div style={{ marginLeft: '60px', border: '1px solid black', padding: '20px', width: 'fit-content' }}>
         <Form onSubmit={handleSubmit}>
@@ -216,7 +142,7 @@ function CusPayment() {
             <div key={index} className="d-flex flex-row align-items-center mb-3">
               <Form.Group className="flex-fill" controlId={`formBasicType${index}`}>
                 <Form.Label>Product</Form.Label>
-                <Form.Select 
+                <Form.Select
                   name="product"
                   value={field.product}
                   onChange={(e) => handleFormChange(index, e)}
@@ -251,9 +177,9 @@ function CusPayment() {
 
           <Form.Group className="mb-3" controlId="formBasicDate">
             <Form.Label>Date</Form.Label>
-            <Form.Control 
+            <Form.Control
               type="date"
-              placeholder="Select the Date" 
+              placeholder="Select the Date"
               value={deliverDate}
               onChange={(e) => setDeliverDate(e.target.value)}
               required

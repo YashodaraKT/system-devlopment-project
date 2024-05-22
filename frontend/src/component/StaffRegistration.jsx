@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
-import { Button, Col, Form, Row,Container } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Button, Form, Modal, Container, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AdminBar from '../../component/AdminBar';
 
+function StaffRegistration(props) {
 
-function StaffRegister() {
-    
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
@@ -62,19 +60,36 @@ function StaffRegister() {
         setContactNumber('');
     };
 
-    return (
-        <div>
-              <div><AdminBar/></div>
-            <br />
-            <br />
-            <div style={{ textAlign: 'center' }}>
-                <h1>Register Staff member</h1>
-            </div>
-            <br />
-            <br />
-            <Container className="sup-register-form-container">
-        <Form className="sup-register-form" onSubmit={handleSubmit}>
-                    <Form.Group className="mb-3" id="formGridName">
+    const ref = useRef();
+  useEffect(() => {
+    const handler = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        props.onHide();
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+    };
+  }, []);
+
+
+  return (
+    <Modal
+    {...props}
+    size="lg"
+    aria-labelledby="contained-modal-title-vcenter"
+    centered
+  >
+    <Modal.Header>
+      <Modal.Title id="contained-modal-title-vcenter">
+        Register Staff
+      </Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <Container className="cus-register-form-container" ref={ref}>
+        <Form className="cus-register-form" onSubmit={handleSubmit}>
+        <Form.Group className="mb-3" id="formGridName">
                         <Form.Label>Name</Form.Label>
                         <Form.Control
                             type="text"
@@ -119,9 +134,14 @@ function StaffRegister() {
                     </Button>
                 </Form>
                 </Container>
-      <ToastContainer />
-        </div>
-    );
+    
+                <ToastContainer />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onHide}>Close</Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }
 
-export default StaffRegister;
+export default StaffRegistration;

@@ -16,17 +16,16 @@ function BasicExample() {
             <Nav.Link href="/">Home</Nav.Link>
             <Nav.Link href="/changepw">Change Password</Nav.Link>
             <NavDropdown title="Register" id="basic-nav-dropdown">
-              <NavDropdown.Item href="/supregister">Suppplier</NavDropdown.Item>
-              <NavDropdown.Item href="/cusregister">Customer</NavDropdown.Item>
-              <NavDropdown.Item href="/staffregister">Staff</NavDropdown.Item>
+              <NavDropdown.Item href="/viewsupplier">Suppplier</NavDropdown.Item>
+              <NavDropdown.Item href="/viewcustomer">Customer</NavDropdown.Item>
+              <NavDropdown.Item href="/viewstaff">Staff</NavDropdown.Item>
             </NavDropdown>
             <Nav.Link href="/viewappointment">Appointment</Nav.Link>
             <NavDropdown title="Orders" id="basic-nav-dropdown">
             <NavDropdown.Item href="/neworders">Pending Orders</NavDropdown.Item>
             <NavDropdown.Item href="/vieworders">Approved Orders</NavDropdown.Item>
-          
             </NavDropdown>
-
+            <Nav.Link href="/suppayment">Supplies</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>

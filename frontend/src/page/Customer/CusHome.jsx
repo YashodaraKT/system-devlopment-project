@@ -43,6 +43,19 @@ function CusHome() {
               </Card>
             </Col>
 
+            <Col xs={6} md={4}>
+              <Card style={{ width: '18rem' }}>
+                <Card.Img variant="top" src={h1Image} />
+                <Card.Body>
+                  <Card.Title>Order Calendar</Card.Title>
+                  <Card.Text>
+                  Easily schedule appointments for delivering your goods to the factory.
+                  </Card.Text>
+                  <Button onClick ={()=> Navigate("/ocalendar")} variant="primary">View Details</Button>
+                </Card.Body>
+              </Card>
+            </Col>
+
            
           </Row>
         </Container>

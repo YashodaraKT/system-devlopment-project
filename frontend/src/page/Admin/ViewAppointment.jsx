@@ -1,40 +1,56 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import Table from 'react-bootstrap/Table';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import moment from 'moment';
 
-function ViewAppointment() {
-    const [appointments, setAppointments] = useState([]);
+function AppointmentList() {
+  const [appointments, setAppointments] = useState([]);
+  const [disabledAppointments, setDisabledAppointments] = useState(new Set());
 
-    useEffect(() => {
-      const fetchVAppointments = async () => {
-        try {
-          const response = await axios.get('http://localhost:8081/view_appointment');
-          setAppointments(response.data);
-        } catch (error) {
-          console.error('Error fetching appointments:', error);
-          toast.error('Error fetching appointments. Please try again later.');
-        }
-      };
-  
-      fetchVAppointments();
-    }, []);
+  useEffect(() => {
+    axios.get('http://localhost:8081/view_appointment')
+      .then(res => {
+        setAppointments(res.data);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }, []);
+
+  const handleApprovalChange = (appointmentId, approval) => {
+    axios.post('http://localhost:8081/update_appointment', {
+      appointmentId: appointmentId,
+      approval: approval
+    })
+    .then(res => {
+      console.log(res.data.message);
+      setAppointments(prevAppointments => 
+        prevAppointments.map(appointment => 
+          appointment.Appointment_ID === appointmentId 
+            ? { ...appointment, Approval: approval } 
+            : appointment
+        )
+      );
+      setDisabledAppointments(prevDisabled => new Set(prevDisabled).add(appointmentId));
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  };
+
   return (
-    <div>
-      <h1>Appointments</h1>
-      <Table>
+    <div className="container">
+      <table className="table">
         <thead>
           <tr>
-            <th>Appointment ID</th>
-            <th>Supplier ID</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>No. of Days</th>
-            <th>Supplier Name</th>
-            <th>Address 1</th>
-            <th>Address 2</th>
-            <th>Location ID</th>
+            <th scope="col">Appointment No</th>
+            <th scope="col">Supplier ID</th>
+            <th scope="col">Supplier Name</th>
+            <th scope="col">Address</th>
+            <th scope="col">Status</th>
+            <th scope="col">Location</th>
+            <th scope="col">Date</th>
+            <th scope="col">Approval</th>
           </tr>
         </thead>
         <tbody>
@@ -42,19 +58,45 @@ function ViewAppointment() {
             <tr key={appointment.Appointment_ID}>
               <td>{appointment.Appointment_ID}</td>
               <td>{appointment.Supplier_ID}</td>
-              <td>{appointment.Date}</td>
-              <td>{appointment.Status}</td>
-              <td>{appointment.No_of_Days}</td>
               <td>{appointment.Name}</td>
-              <td>{appointment.Address1}</td>
-              <td>{appointment.Address2}</td>
-              <td>{appointment.Location_Id}</td>
+              <td>{`${appointment.Address1}, ${appointment.Address2}`}</td>
+              <td>{appointment.Status === 0 ? 'Temporary' : 'Permanent'}</td>
+              <td>{appointment.Location_Name}</td>
+              <td>{moment(appointment.Date).format('MM/DD/YYYY')}</td>
+              <td>
+                <div className="form-check form-check-inline">
+                  <input 
+                    className="form-check-input" 
+                    type="radio" 
+                    name={`approval-${appointment.Appointment_ID}`} 
+                    id={`accept-${appointment.Appointment_ID}`} 
+                    value="1" 
+                    checked={appointment.Approval === 1} 
+                    onChange={() => handleApprovalChange(appointment.Appointment_ID, 1)} 
+                    disabled={disabledAppointments.has(appointment.Appointment_ID)} 
+                  />
+                  <label className="form-check-label" htmlFor={`accept-${appointment.Appointment_ID}`}>Accept</label>
+                </div>
+                <div className="form-check form-check-inline">
+                  <input 
+                    className="form-check-input" 
+                    type="radio" 
+                    name={`approval-${appointment.Appointment_ID}`} 
+                    id={`decline-${appointment.Appointment_ID}`} 
+                    value="0" 
+                    checked={appointment.Approval === 0} 
+                    onChange={() => handleApprovalChange(appointment.Appointment_ID, 0)} 
+                    disabled={disabledAppointments.has(appointment.Appointment_ID)} 
+                  />
+                  <label className="form-check-label" htmlFor={`decline-${appointment.Appointment_ID}`}>Decline</label>
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>
-      </Table>
+      </table>
     </div>
   );
 }
 
-export default ViewAppointment;
+export default AppointmentList;

@@ -1,24 +1,51 @@
-import React, { useState } from 'react';
-import { Button, Col, Form, Row, Container } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Button, Form, Modal,Container, Row, Col} from 'react-bootstrap';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AdminBar from '../../component/AdminBar';
 
-function SupRegister() {
-  const [userName, setUserName] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [address1, setAddress1] = useState('');
-  const [address2, setAddress2] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
-  const [transport, setTransport] = useState(0);
+function SupplierRegistration(props) {
+    const [userName, setUserName] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [address1, setAddress1] = useState('');
+    const [address2, setAddress2] = useState('');
+    const [contactNumber, setContactNumber] = useState('');
+    const [transport, setTransport] = useState(0);
+    const [locations, setLocations] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedLocationName, setSelectedLocationName] = useState('');
+
+  const fetchLocationData = async () => {
+    try {
+      const response = await axios.get('http://localhost:8081/location');
+      if (response.status >= 200 && response.status < 300) {
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+    return [];
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const locationData = await fetchLocationData();
+      setLocations(locationData);
+    };
+    fetchData();
+  }, []);
+  
+
+
+
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     // Form validation: Check if any field is blank
-    if (!userName || !password || !name || !contactNumber || !address1 || !address2 || !transport) {
+    if (!userName || !password || !name || !contactNumber || !address1 || !address2 || !transport || !selectedLocation) {
       toast.error("Please fill in all fields.");
       return;
     }
@@ -42,7 +69,8 @@ function SupRegister() {
           Address1: address1,
           Address2: address2,
           Transport: transport,
-          User_ID: userId
+          Location_Id: selectedLocation, 
+          User_ID: userId,
         });
 
         // Show success notification
@@ -68,19 +96,46 @@ function SupRegister() {
     setAddress1('');
     setAddress2('');
     setTransport('');
+    setSelectedLocation('');
   };
-    return (
-        <div>
-               <div><AdminBar/></div>
-            <br />
-            <br />
-            <br />
-            <div style={{ textAlign: 'center' }}>
-                <h1>Register Supplier</h1>
-            </div>
-            <br />
-            <br />
-            <Container className="cus-register-form-container">
+
+
+  const handleLocationChange = (e) => {
+    const selectedLocationName = e.target.value;
+    const selectedLocationObject = locations.find(
+      (location) => location.Location_Name === selectedLocationName
+    );
+    setSelectedLocation(selectedLocationObject ? selectedLocationObject.Location_Id : '');
+    setSelectedLocationName(selectedLocationName);
+  };
+
+  const ref = useRef();
+  useEffect(() => {
+    const handler = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        props.onHide();
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+    };
+  }, []);
+
+  return (
+    <Modal
+      {...props}
+      size="lg"
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+    >
+      <Modal.Header>
+        <Modal.Title id="contained-modal-title-vcenter">
+          Register Supplier
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Container className="cus-register-form-container" ref={ref}>
         <Form className="cus-register-form" onSubmit={handleSubmit}>
                     <Form.Group className="mb-3" id="formGridName">
                         <Form.Label>Name</Form.Label>
@@ -153,16 +208,37 @@ function SupRegister() {
     <option value="0">No</option>
   </Form.Select>
 </Form.Group>
+
+
+<Form.Group className="mb-3" controlId="formGridLocation">
+  <Form.Label>Location</Form.Label>
+  <Form.Control
+  as="select"
+  value={selectedLocationName}
+  onChange={(e) => handleLocationChange(e)}
+>
+  <option>Select a location</option>
+  {locations.map((location) => (
+    <option key={location.Location_Id} value={location.Location_Name}>
+      {location.Location_Name}
+    </option>
+  ))}
+</Form.Control>
+</Form.Group>
+
                     
                     <Button variant="primary" type="submit">
                         Submit
                     </Button>
                 </Form>
-                </Container>  
-      <ToastContainer />
-           
-        </div>
-    );
+        </Container>
+        <ToastContainer />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onHide}>Close</Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }
 
-export default SupRegister;
+export default SupplierRegistration;

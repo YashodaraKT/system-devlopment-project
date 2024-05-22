@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
-import { Button, Col, Form, Row, Container } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Button, Form, Modal, Container, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AdminBar from '../../component/AdminBar';
 
+function CustomerRegistration(props) {
 
-function CusRegister() {
-    
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
@@ -70,18 +68,34 @@ function CusRegister() {
         setEmail('');
     };
 
-    return (
-        <div>
-               <div><AdminBar/></div>
-            <br />
-            <br />
-            <br />
-            <div style={{ textAlign: 'center' }}>
-                <h1>Register Customer</h1>
-            </div>
-            <br />
-            <br />
-            <Container className="cus-register-form-container">
+    const ref = useRef();
+  useEffect(() => {
+    const handler = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        props.onHide();
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+    };
+  }, []);
+
+
+  return (
+    <Modal
+    {...props}
+    size="lg"
+    aria-labelledby="contained-modal-title-vcenter"
+    centered
+  >
+    <Modal.Header>
+      <Modal.Title id="contained-modal-title-vcenter">
+        Register Supplier
+      </Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <Container className="cus-register-form-container" ref={ref}>
         <Form className="cus-register-form" onSubmit={handleSubmit}>
                     <Form.Group className="mb-3" id="formGridName">
                         <Form.Label>Name</Form.Label>
@@ -157,10 +171,14 @@ function CusRegister() {
                     </Button>
                 </Form>
                 </Container>
-      <ToastContainer />
-            
-        </div>
-    );
+    
+                <ToastContainer />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onHide}>Close</Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }
 
-export default CusRegister;
+export default CustomerRegistration;
