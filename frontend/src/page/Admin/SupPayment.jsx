@@ -4,12 +4,30 @@ import axios from 'axios';
 import moment from 'moment';
 import NewSupply from '../../component/NewSupply';
 import SupplyPrice from '../../component/SupplyPrice';
- // Import the new popup component
 
 function ViewSupplierPayments() {
   const [supplies, setSupplies] = useState([]);
   const [showNewSupply, setShowNewSupply] = useState(false);
-  const [showNewPopup, setShowNewPopup] = useState(false);  // State for new popup
+  const [showNewPopup, setShowNewPopup] = useState(false);
+  const [priceWithTransport, setPriceWithTransport] = useState('');
+  const [priceWithoutTransport, setPriceWithoutTransport] = useState('');
+
+  useEffect(() => {
+    const savedPriceWithoutTransport = localStorage.getItem("priceWithoutTransport");
+    const savedPriceWithTransport = localStorage.getItem("priceWithTransport");
+  
+    if (savedPriceWithoutTransport) {
+      setPriceWithoutTransport(savedPriceWithoutTransport);
+    }
+  
+    if (savedPriceWithTransport) {
+      setPriceWithTransport(savedPriceWithTransport);
+    }
+  }, []);
+  
+
+  console.log("Price without transport in ViewSupplierPayments:", priceWithoutTransport);
+  console.log("Price with transport in ViewSupplierPayments:", priceWithTransport);
 
   const fetchSupplierPayments = async () => {
     try {
@@ -43,8 +61,16 @@ function ViewSupplierPayments() {
   const handleShowNewSupply = () => setShowNewSupply(true);
   const handleCloseNewSupply = () => setShowNewSupply(false);
 
-  const handleShowNewPopup = () => setShowNewPopup(true);  // Show new popup
-  const handleCloseNewPopup = () => setShowNewPopup(false);  // Close new popup
+  const handleShowNewPopup = () => setShowNewPopup(true);
+  const handleCloseNewPopup = () => setShowNewPopup(false);
+
+  const handlePriceWithTransportChange = (value) => {
+    setPriceWithTransport(value);
+  };
+
+  const handlePriceWithoutTransportChange = (value) => {
+    setPriceWithoutTransport(value);
+  };
 
   return (
     <div>
@@ -65,6 +91,7 @@ function ViewSupplierPayments() {
               <th>Supplier ID</th>
               <th>Supplier Name</th>
               <th>Contact Number</th>
+              <th>Quantity</th>
               <th>Supply Date</th>
               <th>Payment (LKR)</th>
               <th>Payment Status</th>
@@ -77,6 +104,7 @@ function ViewSupplierPayments() {
                 <td>{supply.Supplier_ID}</td>
                 <td>{supply.Name}</td>
                 <td>{supply.Contact_Number}</td>
+                <td>{supply.Quantity}</td>
                 <td>{moment(supply.Date).format('MM/DD/YYYY')}</td>
                 <td>{supply.Payment}</td>
                 <td>
@@ -95,8 +123,15 @@ function ViewSupplierPayments() {
           </tbody>
         </Table>
       </div>
-      <NewSupply show={showNewSupply} handleClose={handleCloseNewSupply} fetchSupplierPayments={fetchSupplierPayments} />
-      <SupplyPrice show={showNewPopup} handleClose={handleCloseNewPopup} />  
+      <NewSupply show={showNewSupply} handleClose={handleCloseNewSupply} fetchSupplierPayments={fetchSupplierPayments} priceWithTransport={priceWithTransport} priceWithoutTransport={priceWithoutTransport} />
+      <SupplyPrice
+  show={showNewPopup}
+  handleClose={handleCloseNewPopup}
+  setPriceWithTransport={setPriceWithTransport}
+  setPriceWithoutTransport={setPriceWithoutTransport}
+  priceWithoutTransport={priceWithoutTransport}
+  priceWithTransport={priceWithTransport}
+/>
     </div>
   );
 }

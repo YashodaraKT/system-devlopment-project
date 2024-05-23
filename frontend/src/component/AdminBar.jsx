@@ -25,6 +25,10 @@ function BasicExample() {
             <NavDropdown.Item href="/neworders">Pending Orders</NavDropdown.Item>
             <NavDropdown.Item href="/vieworders">Approved Orders</NavDropdown.Item>
             </NavDropdown>
+            <NavDropdown title="Inventory" id="basic-nav-dropdown">
+            <NavDropdown.Item href="/production">Product</NavDropdown.Item>
+            <NavDropdown.Item href="/rawmaterial">Raw Material</NavDropdown.Item>
+            </NavDropdown> 
             <Nav.Link href="/suppayment">Supplies</Nav.Link>
           </Nav>
         </Navbar.Collapse>

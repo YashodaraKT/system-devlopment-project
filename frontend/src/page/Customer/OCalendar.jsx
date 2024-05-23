@@ -38,22 +38,39 @@ function OCalendar() {
     
       const fetchCustomerOrders = async () => {
         try {
-          const response = await axios.get(`http://localhost:8081/customer_order/${customerId}`);
+          const response = await axios.get(`http://localhost:8081/calendar_order/${customerId}`);
           console.log('Order data:', response.data);
           setOrders(response.data.orders);
           const eventsData = response.data.orders.map(order => {
+             
             const products = order.Products.split(',').map(item => {
               const [name, qty, value] = item.split(' - ');
               return `${name} (${qty}, Rs ${value})`;
             }).join(', ');
+
+            let color;
+  switch (order.Approval) {
+    case 0:
+      color = 'red'; // Change color to red for Approval value 0
+      break;
+    case 1:
+      color = 'green'; // Change color to green for Approval value 1
+      break;
+    case 10:
+      color = 'blue'; // Change color to blue for Approval value 10
+      break;
+    default:
+      color = 'blue'; // Default color if Approval value is not 0, 1, or 10
+  }
     
             return {
               title: `Order ${order.Order_ID}`,
-              details: `Products: ${products} | Total: Rs ${order.Payment}`,
+              details: `Products: ${products} | Total: Rs ${order.Total_Payment}`,
               start: new Date(order.Deliver_Date),
               end: new Date(order.Deliver_Date),
               allDay: true,
               order,
+              color,
             };
           });
           setEvents(eventsData);
@@ -92,14 +109,20 @@ function OCalendar() {
         <h2>Delivery Calendar</h2>
 
         <div style={{ border: '1px solid gray', padding: '10px', borderRadius: '5px' }}>
-          <Calendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: 500, width: '80vw' }}
-            onSelectEvent={handleEventClick}
-          />
+        <Calendar
+  localizer={localizer}
+  events={events}
+  startAccessor="start"
+  endAccessor="end"
+  style={{ height: 500, width: '80vw' }}
+  onSelectEvent={handleEventClick}
+  eventPropGetter={event => ({
+    style: {
+      backgroundColor: event.color,
+    },
+  })}
+  views={['month']} // Set to display only the month view
+/>
         </div>
 
 
@@ -124,7 +147,7 @@ function OCalendar() {
                   );
                 })}
               </ul>
-              <p><strong>Total Payment:</strong> Rs {selectedOrder.Payment}</p>
+              <p><strong>Total Payment:</strong> Rs {selectedOrder.Total_Payment}</p>
               <p><strong>Deliver Date:</strong> {moment(selectedOrder.Deliver_Date).format('MM/DD/YYYY')}</p>
             </div>
           </Modal.Body>

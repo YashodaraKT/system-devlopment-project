@@ -3,13 +3,14 @@ import { Modal, Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
 
-function NewSupplyForm({ show, handleClose, fetchSupplierPayments }) {
+function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTransport, priceWithoutTransport }) {
   const [newSupply, setNewSupply] = useState({
     Supplier_Name: '',
     Contact_Number: '',
     Quantity: '',
     Payment: ''
   });
+  const [transport, setTransport] = useState(0);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,11 +32,18 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments }) {
 
       if (supplierResponse.data.supplier) {
         const supplierId = supplierResponse.data.supplier.Supplier_ID;
+        const transportStatus = supplierResponse.data.supplier.Transport;
+        console.log("Transport value before setTransport:", transportStatus);
+        setTransport(transportStatus);
+        console.log("Transport value:", transportStatus);
+
         const date = moment().format('YYYY-MM-DD');
+        const payment = transportStatus === 1 ? priceWithTransport * newSupply.Quantity : priceWithoutTransport * newSupply.Quantity;
+        console.log("Total payment calculated:", payment);
         const newSupplyData = {
           Supplier_ID: supplierId,
           Quantity: newSupply.Quantity,
-          Payment: newSupply.Payment,
+          Payment: payment,
           Date: date
         };
 
@@ -81,7 +89,7 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments }) {
           <Form.Group controlId="Quantity">
             <Form.Label>Quantity</Form.Label>
             <Form.Control
-              type="text"
+              type="number"
               name="Quantity"
               value={newSupply.Quantity}
               onChange={handleInputChange}
@@ -91,11 +99,10 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments }) {
           <Form.Group controlId="Payment">
             <Form.Label>Payment (LKR)</Form.Label>
             <Form.Control
-              type="text"
+              type="number"
               name="Payment"
-              value={newSupply.Payment}
-              onChange={handleInputChange}
-              required
+              value={newSupply.Quantity ? (transport === 1 ? priceWithTransport * newSupply.Quantity : priceWithoutTransport * newSupply.Quantity) : ''}
+              readOnly
             />
           </Form.Group>
           <Button variant="primary" type="submit">

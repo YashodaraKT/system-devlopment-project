@@ -20,6 +20,8 @@ import ViewSupplier from './page/Admin/ViewSupplier';
 import ViewCustomer from './page/Admin/ViewCustomer';
 import ViewStaff from './page/Admin/ViewStaff';
 import SupPayment from './page/Admin/SupPayment';
+import RawMaterial from './page/Admin/RawMaterial';
+import Production from './page/Admin/Production';
 
 
 function App() {
@@ -46,6 +48,8 @@ function App() {
 <Route path='/viewstaff' element={<ViewStaff/>}></Route>
 <Route path='/suppayment' element={<SupPayment/>}></Route>
 <Route path='/ocalendar' element={<OCalendar/>}></Route>
+<Route path='/production' element={<Production/>}></Route>
+<Route path='/rawmaterial' element={<RawMaterial/>}></Route>
 </Routes>
 
 

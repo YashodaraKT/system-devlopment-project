@@ -3,19 +3,15 @@ import ProfilenavBar from '../../component/ProfilenavBar';
 import { Modal, Button, Form } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
-import CustomerCalendar from '../../component/CustomerCalendar';
+
 
 function CusPayment() {
   const [products, setProducts] = useState([]);
   const [formFields, setFormFields] = useState([{ product: '', quantity: '' }]);
   const [ordervalue, setOrderValue] = useState(0);
   const [deliverDate, setDeliverDate] = useState('');
-  const [customerId, setCustomerId] = useState(null); // Add this line
-  const [showCalendar, setShowCalendar] = useState(false);
-
-  const handleShowCalendar = () => setShowCalendar(true);
-  const handleCloseCalendar = () => setShowCalendar(false);
-
+  const [customerId, setCustomerId] = useState(null);
+ 
   const fetchCustomerId = async () => {
     try {
       const userJson = localStorage.getItem('user');
@@ -80,9 +76,10 @@ function CusPayment() {
     try {
       const orderItems = formFields.map(field => {
         const product = products.find(p => p.Product_Name === field.product);
+        const quantity = parseInt(field.quantity);
         return {
-          Product_Name: product.Product_Name,
-          Quantity: field.quantity,
+          Product_ID: product.Product_ID, // Retrieve the Product_ID from the selected product
+          Quantity: quantity,
           Value: field.quantity * product.Selling_Price,
         };
       });
@@ -95,7 +92,7 @@ function CusPayment() {
       };
 
       console.log('Order data:', orderData);
-      await axios.post('http://localhost:8081/customer_order', orderData);
+      await axios.post('http://localhost:8081/enter_customer_order', orderData);
       alert('Order placed successfully!');
       setFormFields([{ product: '', quantity: '' }]);
       setDeliverDate('');
@@ -108,25 +105,6 @@ function CusPayment() {
 
   return (
     <div>
-      <div>
-        <Button variant="primary" onClick={handleShowCalendar}>
-          Show Customer Calendar
-        </Button>
-
-        <Modal show={showCalendar} onHide={handleCloseCalendar} size="lg">
-          <Modal.Header closeButton>
-            <Modal.Title>Customer Calendar</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <CustomerCalendar />
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseCalendar}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </div>
 
       <div>
         <ProfilenavBar />

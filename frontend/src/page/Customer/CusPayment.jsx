@@ -100,6 +100,7 @@ function CusPayment() {
       </td>
                  <td>{customer_order.Payment}</td>
                 <td>{moment(customer_order.Deliver_Date).format('MM/DD/YYYY')}</td>
+                <td>{customer_order.Payment_Status === 0 ? 'Pending' : 'Paid'}</td>
               
                
               </tr>
