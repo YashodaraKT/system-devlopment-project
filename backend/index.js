@@ -3,6 +3,8 @@
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql';
+import moment from 'moment';
+
 
 const app= express();
 
@@ -222,15 +224,45 @@ app.post('/change-password', (req, res) => {
 //---------------------------------retrive order details-------
 app.get('/customer_order/:customerId', (req, res) => {
   const customerId = req.params.customerId;
-  const sql = `SELECT o.Order_ID, o.Deliver_Date, ao.Payment,
+  const sql = `SELECT o.Order_ID, o.Deliver_Date, ao.Payment,ao.Payment_Status,
   GROUP_CONCAT(CONCAT(p.Product_Name, ' - ', oi.Quantity, '  - ', oi.Value, ' ')) AS Products,
   SUM(oi.Quantity * oi.Value) AS Total_Value
 FROM customer_order o
 JOIN order_item oi ON oi.Order_ID = o.Order_ID
 JOIN approved_order ao ON ao.Order_ID = o.Order_ID
 JOIN product p ON oi.Product_ID = p.Product_ID
-WHERE o.Customer_ID = ?
+WHERE o.Customer_ID = ? And
+o.Approval = 1
 GROUP BY o.Order_ID, o.Deliver_Date, ao.Payment
+`;
+
+  db.query(sql, [customerId], (err, data) => {
+    if (err) {
+      console.error('Database query error:', err);  // Log error for debugging
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+    if (data.length === 0) {
+      console.log('No orders found for customer ID:', customerId);  // Log no data found
+      return res.status(404).json({ error: "Orders not found" });
+    }
+    console.log('Query result:', data);  // Log the data for debugging
+    console.log(data)
+    return res.json({ orders: data });
+  });
+});
+//--------------------------Calendar
+app.get('/calendar_order/:customerId', (req, res) => {
+  const customerId = req.params.customerId;
+  const sql = `SELECT o.Order_ID, o.Deliver_Date, 
+  GROUP_CONCAT(CONCAT(p.Product_Name, ' - ', oi.Quantity, '  - ', oi.Value, ' ')) AS Products,
+  SUM(oi.Quantity * oi.Value) AS Total_Value,
+  SUM(oi.Value) AS Total_Payment,
+  o.Approval
+FROM customer_order o
+JOIN order_item oi ON oi.Order_ID = o.Order_ID
+JOIN product p ON oi.Product_ID = p.Product_ID
+WHERE o.Customer_ID = ? 
+GROUP BY o.Order_ID, o.Deliver_Date
 `;
 
   db.query(sql, [customerId], (err, data) => {
@@ -404,7 +436,7 @@ app.put("/Approval_orders/:orderId", (req, res) => {
 
 //---------------get Productname
 app.get('/products', (req, res) => {
-  const sql = 'SELECT  Product_Name,Selling_Price FROM product';
+  const sql = 'SELECT  Product_Name,Selling_Price,Product_ID FROM product';
   db.query(sql, (err, result) => {
     if (err) {
       console.error('Error fetching products:', err);
@@ -417,7 +449,7 @@ app.get('/products', (req, res) => {
 
 //---------------------------
 
-app.post('/customer_order', async (req, res) => {
+app.post('/enter_customer_order', async (req, res) => {
   try {
     const { Customer_ID, Deliver_Date, orderItems } = req.body;
     const Order_Date = moment().format('YYYY-MM-DD');
@@ -425,25 +457,28 @@ app.post('/customer_order', async (req, res) => {
     const insertOrderQuery = 'INSERT INTO customer_order (Customer_ID, Order_Date, Deliver_Date) VALUES (?, ?, ?)';
     const insertOrderItemQuery = 'INSERT INTO order_item (Order_ID, Product_ID, Quantity, Value) VALUES (?, ?, ?, ?)';
 
+    // Insert into customer_order table
     const orderResult = await new Promise((resolve, reject) => {
       db.query(insertOrderQuery, [Customer_ID, Order_Date, Deliver_Date], (err, result) => {
         if (err) {
-          reject(err);
-        } else {
-          resolve(result);
+          console.error('Error inserting customer order:', err);
+          return reject(err);
         }
+        resolve(result);
       });
     });
 
-    const Order_ID = orderResult.insertId;
+    const Order_ID = orderResult.insertId; // Get the generated Order_ID
+
+    // Insert into order_item table for each item in the orderItems array
     const orderItemPromises = orderItems.map(item => {
       return new Promise((resolve, reject) => {
         db.query(insertOrderItemQuery, [Order_ID, item.Product_ID, item.Quantity, item.Value], (err) => {
           if (err) {
-            reject(err);
-          } else {
-            resolve();
+            console.error('Error inserting order item:', err);
+            return reject(err);
           }
+          resolve();
         });
       });
     });
@@ -456,6 +491,7 @@ app.post('/customer_order', async (req, res) => {
   }
 });
 
+
 //----------view supplier
 
 app.get('/viewsupplier', (req, res) => {
@@ -467,6 +503,23 @@ app.get('/viewsupplier', (req, res) => {
     }
   });
 });
+//------Update Supplier
+
+app.put('/updatesupplier/:id', (req, res) => {
+  const { id } = req.params;
+  const { Contact_Number, Transport } = req.body;
+  const sql = 'UPDATE supplier SET Contact_Number = ?, Transport = ? WHERE Supplier_ID = ?';
+  db.query(sql, [Contact_Number, Transport, id], (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send({ success: true });
+    }
+  });
+});
+
+
+
 //----------view customer
 
 app.get('/viewcustomer', (req, res) => {
@@ -478,6 +531,24 @@ app.get('/viewcustomer', (req, res) => {
     }
   });
 });
+//----------------------update customer
+// Add this to your existing Express app
+app.put('/updatecustomer/:id', (req, res) => {
+  const { id } = req.params;
+  const { Contact_Number } = req.body;
+  const sql = 'UPDATE customer SET Contact_Number = ? WHERE Customer_ID = ?';
+  db.query(sql, [Contact_Number, id], (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send({ success: true });
+    }
+  });
+});
+
+
+
+
 //----------view staff
 
 app.get('/viewstaff', (req, res) => {
@@ -489,12 +560,27 @@ app.get('/viewstaff', (req, res) => {
     }
   });
 });
+//----------Update Staff
+
+// Add this to your existing Express app
+app.put('/updatestaffcontact/:id', (req, res) => {
+  const { id } = req.params;
+  const { Contact_Number } = req.body;
+  const sql = 'UPDATE staff SET Contact_Number = ? WHERE Staff_ID = ?';
+  db.query(sql, [Contact_Number, id], (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send({ success: true });
+    }
+  });
+});
 
 
 //-------------------------Spayment View---------------------------------------
 app.get('/supplier_payments', (req, res) => {
   const query = `
-    SELECT s.Supply_ID, s.Supplier_ID, su.Name, su.Contact_Number, s.Date, s.Payment, s.Payment_Status
+    SELECT s.Supply_ID, s.Supplier_ID, su.Name, su.Contact_Number, s.Date,s.Quantity, s.Payment, s.Payment_Status
     FROM supply AS s
     INNER JOIN supplier AS su ON s.Supplier_ID = su.Supplier_ID
   `;
@@ -526,11 +612,11 @@ app.put('/approved_supplier_payments/:id', (req, res) => {
     }
   });
 });
-//---------------------------------------------------
+//------------------------------Enter the supplies---------------------
 app.get('/find_supplier', (req, res) => {
   const { name, contact } = req.query;
   const query = `
-    SELECT Supplier_ID
+    SELECT Supplier_ID, Transport
     FROM supplier
     WHERE Name = ? AND Contact_Number = ?
   `;
@@ -551,6 +637,7 @@ app.get('/find_supplier', (req, res) => {
 
 
 
+
 app.post('/add_supply', (req, res) => {
   const { Supplier_ID, Quantity, Payment, Date } = req.body;
   const query = `
@@ -566,8 +653,91 @@ app.post('/add_supply', (req, res) => {
   });
 });
 
+//-----------------------------
 
+app.post('/transport/request', (req, res) => {
+  const { supplierId, isPermanent, size, date } = req.body;
+  let status = isPermanent ? 1 : 0;
 
+  const query = `INSERT INTO appointment (Supplier_ID, Date, Size, Status) VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE Date=VALUES(Date), Size=VALUES(Size), Status=VALUES(Status)`;
+
+  db.query(query, [supplierId, isPermanent ? null : date, isPermanent ? null : size, status], (err, result) => {
+      if (err) {
+          console.error('Error executing query:', err);
+          return res.status(500).send('Server error');
+      }
+      res.status(200).send('Transport request submitted successfully');
+  });
+});
+
+//-------View Production
+
+// Assuming you're using Express and MySQL
+app.get('/viewproduction', (req, res) => {
+  const sql = `
+    SELECT p.Product_Name, pr.Date, pr.Quantity 
+    FROM production pr
+    JOIN product p ON pr.Product_ID = p.Product_ID
+  `;
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+
+// Assuming you're using Express and MySQL
+app.post('/addproduction', (req, res) => {
+  const { Product_ID, Date, Quantity } = req.body;
+  const sql = 'INSERT INTO production (Product_ID, Date, Quantity) VALUES (?, ?, ?)';
+  db.query(sql, [Product_ID, Date, Quantity], (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.status(200).send('Production added successfully');
+    }
+  });
+});
+
+// Endpoint to get products
+app.get('/products', (req, res) => {
+  const sql = 'SELECT * FROM product';
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+//****************Inve Productuon */
+app.get('/calculateTotalQuantity', (req, res) => {
+  const sql = `
+    SELECT p.Product_ID, 
+           p.Product_Name, 
+           SUM(pr.Quantity) AS productionQuantity,
+           COALESCE(SUM(oi.Quantity), 0) AS orderItemQuantity
+    FROM production pr
+    JOIN product p ON pr.Product_ID = p.Product_ID
+    LEFT JOIN order_item oi ON pr.Product_ID = oi.Product_ID
+    GROUP BY p.Product_ID, p.Product_Name
+  `;
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      const calculatedResult = result.map((row) => ({
+        productId: row.Product_ID,
+        productName: row.Product_Name,
+        totalQuantity: row.productionQuantity - row.orderItemQuantity
+      }));
+      res.send(calculatedResult);
+    }
+  });
+});
 
 
 
