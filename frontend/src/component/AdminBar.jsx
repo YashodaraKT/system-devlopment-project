@@ -30,6 +30,10 @@ function BasicExample() {
             <NavDropdown.Item href="/rawmaterial">Raw Material</NavDropdown.Item>
             </NavDropdown> 
             <Nav.Link href="/suppayment">Supplies</Nav.Link>
+            <NavDropdown title="Change" id="basic-nav-dropdown">
+            <NavDropdown.Item href="/product">Product</NavDropdown.Item>
+            <NavDropdown.Item href="/material">Raw Material</NavDropdown.Item>
+            </NavDropdown> 
           </Nav>
         </Navbar.Collapse>
       </Container>

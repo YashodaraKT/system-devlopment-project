@@ -703,8 +703,8 @@ app.post('/addproduction', (req, res) => {
 });
 
 // Endpoint to get products
-app.get('/products', (req, res) => {
-  const sql = 'SELECT * FROM product';
+app.get('/productsdw', (req, res) => {
+  const sql = 'SELECT * FROM product WHERE active_status = 1';
   db.query(sql, (err, result) => {
     if (err) {
       res.status(500).send(err);
@@ -718,13 +718,21 @@ app.get('/calculateTotalQuantity', (req, res) => {
   const sql = `
     SELECT p.Product_ID, 
            p.Product_Name, 
-           SUM(pr.Quantity) AS productionQuantity,
-           COALESCE(SUM(oi.Quantity), 0) AS orderItemQuantity
-    FROM production pr
-    JOIN product p ON pr.Product_ID = p.Product_ID
-    LEFT JOIN order_item oi ON pr.Product_ID = oi.Product_ID
-    GROUP BY p.Product_ID, p.Product_Name
+           COALESCE(pr.productionQuantity, 0) AS productionQuantity,
+           COALESCE(oi.orderItemQuantity, 0) AS orderItemQuantity
+    FROM product p
+    LEFT JOIN (
+      SELECT Product_ID, SUM(Quantity) AS productionQuantity
+      FROM production
+      GROUP BY Product_ID
+    ) pr ON p.Product_ID = pr.Product_ID
+    LEFT JOIN (
+      SELECT Product_ID, SUM(Quantity) AS orderItemQuantity
+      FROM order_item
+      GROUP BY Product_ID
+    ) oi ON p.Product_ID = oi.Product_ID
   `;
+
   db.query(sql, (err, result) => {
     if (err) {
       res.status(500).send(err);
@@ -732,12 +740,245 @@ app.get('/calculateTotalQuantity', (req, res) => {
       const calculatedResult = result.map((row) => ({
         productId: row.Product_ID,
         productName: row.Product_Name,
+        productionQuantity: row.productionQuantity,
+        orderItemQuantity: row.orderItemQuantity,
         totalQuantity: row.productionQuantity - row.orderItemQuantity
       }));
-      res.send(calculatedResult);
+
+      // Update the Stock column in the database
+      const updatePromises = calculatedResult.map((row) => {
+        const updateSql = `
+          UPDATE product
+          SET In_Stock = ?
+          WHERE Product_ID = ?
+        `;
+        return new Promise((resolve, reject) => {
+          db.query(updateSql, [row.totalQuantity, row.productId], (updateErr, updateResult) => {
+            if (updateErr) {
+              reject(updateErr);
+            } else {
+              resolve(updateResult);
+            }
+          });
+        });
+      });
+
+      Promise.all(updatePromises)
+        .then(() => {
+          res.send(calculatedResult);
+        })
+        .catch((updateErr) => {
+          res.status(500).send(updateErr);
+        });
     }
   });
 });
+
+
+//-------------- view Raw material actions
+app.get('/getRawMaterialInventory', (req, res) => {
+  const sql = `
+    SELECT ri.R_ID, 
+           rm.R_Name, 
+           ri.Quantity, 
+           ri.Date, 
+           ri.Action
+    FROM rawmaterial_inv ri
+    JOIN rawmaterial rm ON ri.R_ID = rm.R_ID
+  `;
+  
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+//-----------------add or purchase RM
+app.post('/addRawMaterial', (req, res) => {
+  const { R_Name, Quantity, Date, Action } = req.body;
+  const getRIdQuery = `
+    SELECT R_ID FROM rawmaterial WHERE R_Name = ?
+  `;
+  
+  db.query(getRIdQuery, [R_Name], (err, result) => {
+    if (err) {
+      console.error('Error fetching R_ID:', err);
+      return res.status(500).send(err);
+    } else {
+      if (result.length === 0) {
+        return res.status(404).send('Raw material not found');
+      }
+      const R_ID = result[0].R_ID;
+    
+      const insertQuery = `
+        INSERT INTO rawmaterial_inv (R_ID, Quantity, Date, Action)
+        VALUES (?, ?, ?, ?)
+      `;
+      
+      db.query(insertQuery, [R_ID, Quantity, Date, Action], (err, result) => {
+        if (err) {
+          console.error('Error inserting raw material:', err);
+          return res.status(500).send(err);
+        } else {
+          console.log('Raw material added successfully');
+          return res.status(201).send('Raw material added successfully');
+        }
+      });
+    }
+  });
+});
+
+//-----------RM dropdown
+app.get('/getRawMaterialNames', (req, res) => {
+  const sql = `
+    SELECT R_Name FROM rawmaterial
+  `;
+  
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      const names = result.map(row => row.R_Name);
+      res.send(names);
+    }
+  });
+});
+//------------------stock
+app.get('/getMaterials', (req, res) => {
+  const sql = `
+    SELECT rm.R_ID,
+           rm.R_Name, 
+           SUM(CASE WHEN ri.Action = 1 THEN ri.Quantity ELSE -ri.Quantity END) AS Stock
+    FROM rawmaterial_inv ri
+    JOIN rawmaterial rm ON ri.R_ID = rm.R_ID
+    GROUP BY rm.R_ID, rm.R_Name;
+  `;
+  
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      result.forEach(item => {
+        const updateSql = `UPDATE rawmaterial SET Stock = ${item.Stock} WHERE R_ID = ${item.R_ID};`;
+        db.query(updateSql, (updateErr, updateResult) => {
+          if (updateErr) {
+            console.error('Error updating stock:', updateErr);
+          }
+        });
+      });
+      res.send(result);
+    }
+  });
+});
+
+//-------View Product Table
+app.get('/viewProducts', (req, res) => {
+  const sql = `SELECT * FROM product WHERE Active_Status = 1;`;
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+//------------------------
+// Edit product
+app.put('/updateProduct/:id', (req, res) => {
+  const { id } = req.params;
+  const {  Cost, Selling_Price } = req.body;
+  const sql = 'UPDATE product SET  Cost = ?, Selling_Price = ? WHERE Product_ID = ?';
+  db.query(sql, [ Cost, Selling_Price, id], (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send({ success: true });
+    }
+  });
+});
+
+// Delete a product
+app.put('/deactivateProduct/:id', (req, res) => {
+  const { id } = req.params;
+  console.log(`Attempting to deactivate product with ID: ${id}`);
+  const sql = 'UPDATE product SET Active_Status = 0 WHERE Product_ID = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('SQL Error:', err);
+      res.status(500).send({ error: 'Database query failed', details: err });
+    } else if (result.affectedRows === 0) {
+      console.warn(`Product with ID: ${id} not found`);
+      res.status(404).send({ error: 'Product not found' });
+    } else {
+      console.log(`Product with ID: ${id} deactivated successfully`);
+      res.send({ success: true });
+    }
+  });
+});
+//--------------add product
+
+app.post('/addProduct', (req, res) => {
+  const { Product_Name, Cost, Selling_Price } = req.body;
+  const sql = 'INSERT INTO product (Product_Name, Cost, Selling_Price) VALUES (?, ?, ?)';
+  const values = [Product_Name, Cost, Selling_Price];
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('Error adding product:', err);
+      res.status(500).send('Error adding product');
+    } else {
+      const productId = result.insertId;
+      const newProduct = { Product_ID: productId, Product_Name, Cost, Selling_Price, In_Stock: 0 }; // Assuming In_Stock starts at 0
+      res.status(201).send(newProduct);
+    }
+  });
+});
+
+
+
+
+
+//--------------Get RM table
+app.get('/rawmaterials', (req, res) => {
+  const sql = `SELECT * FROM rawmaterial`;
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+//----------------------------Add new RM
+app.post('/rawmaterials', (req, res) => {
+  const { R_Name, Buying_Price } = req.body;
+
+  // Assuming R_ID is auto-incremented and Stock has default value
+
+  // Insert query
+  const sql = 'INSERT INTO rawmaterial (R_Name, Buying_Price) VALUES (?, ?)';
+  const values = [R_Name, Buying_Price];
+
+  // Execute the query
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('Error adding raw material:', err);
+      res.status(500).send('Error adding raw material');
+    } else {
+      console.log('Raw material added successfully');
+      res.status(201).send('Raw material added successfully');
+    }
+  });
+});
+
+
+
+
+
 
 
 

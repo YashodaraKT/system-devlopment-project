@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Container, Button, Modal } from 'react-bootstrap'; // Import Modal from react-bootstrap
+import { Table, Container, Button, Modal } from 'react-bootstrap';
 import AdminBar from '../../component/AdminBar';
-import ProductInv from '../../component/ProductInv'; // Import ProductInv component
+import ProductInv from '../../component/ProductInv';
 
 function Production() {
   const [productions, setProductions] = useState([]);
@@ -13,12 +13,12 @@ function Production() {
     Quantity: ''
   });
   const [products, setProducts] = useState([]);
-  const [showProductInv, setShowProductInv] = useState(false); // State to control ProductInv visibility
+  const [showProductInv, setShowProductInv] = useState(false);
 
   useEffect(() => {
     const fetchProductionData = async () => {
       try {
-        const response = await axios.get('/calculateTotalQuantity');
+        const response = await axios.get('http://localhost:8081/calculateTotalQuantity');
         setProductionData(response.data);
       } catch (error) {
         console.error('Error fetching production data:', error);
@@ -28,13 +28,14 @@ function Production() {
     fetchProductionData();
   }, []);
 
-
   useEffect(() => {
     const fetchData = async () => {
       const productionResult = await axios.get('http://localhost:8081/viewproduction');
       setProductions(productionResult.data);
 
-      const productResult = await axios.get('http://localhost:8081/products'); // Assuming you have an endpoint to get all products
+      
+
+      const productResult = await axios.get('http://localhost:8081/productsdw');
       setProducts(productResult.data);
     };
 
@@ -51,7 +52,7 @@ function Production() {
       await axios.post('http://localhost:8081/addproduction', newProduction);
       const updatedProductions = await axios.get('http://localhost:8081/viewproduction');
       setProductions(updatedProductions.data);
-      setNewProduction({ Product_ID: '', Date: '', Quantity: '' }); // Clear the form
+      setNewProduction({ Product_ID: '', Date: '', Quantity: '' });
     } catch (error) {
       console.error('Error adding production:', error);
     }
@@ -70,23 +71,23 @@ function Production() {
       <AdminBar />
       <Container className="mt-5">
         <h1>Production Records</h1>
-        <Button variant="secondary" onClick={handleShowProductInv} productionData={productionData}>Product Inventory</Button> {/* Button to show ProductInv */}
+        <Button variant="secondary" onClick={handleShowProductInv}>Product Inventory</Button>
         <Table striped bordered hover className="mt-3">
           <thead>
             <tr>
               <th>Product Name</th>
               <th>Date</th>
               <th>Quantity</th>
-              <th></th> {/* Empty cell for Add button */}
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {productions.map((production, index) => (
-              <tr key={`${production.Product_Name}-${production.Date}`}>
+              <tr key={`${production.Product_ID}-${production.Date}-${index}`}>
                 <td>{production.Product_Name}</td>
                 <td>{new Date(production.Date).toLocaleDateString()}</td>
                 <td>{production.Quantity}</td>
-                <td></td> {/* Empty cell for Add button */}
+                <td></td>
               </tr>
             ))}
             <tr>
@@ -133,13 +134,12 @@ function Production() {
           </tbody>
         </Table>
       </Container>
-      {/* Modal for ProductInv */}
       <Modal show={showProductInv} onHide={handleCloseProductInv}>
         <Modal.Header closeButton>
           <Modal.Title>Product Inventory</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ProductInv />
+          <ProductInv productionData={productionData} />
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseProductInv}>

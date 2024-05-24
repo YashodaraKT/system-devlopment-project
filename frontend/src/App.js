@@ -22,6 +22,8 @@ import ViewStaff from './page/Admin/ViewStaff';
 import SupPayment from './page/Admin/SupPayment';
 import RawMaterial from './page/Admin/RawMaterial';
 import Production from './page/Admin/Production';
+import Material from './page/Admin/Material';
+import Product from './page/Admin/Product';
 
 
 function App() {
@@ -50,6 +52,8 @@ function App() {
 <Route path='/ocalendar' element={<OCalendar/>}></Route>
 <Route path='/production' element={<Production/>}></Route>
 <Route path='/rawmaterial' element={<RawMaterial/>}></Route>
+<Route path='/product' element={<Product/>}></Route>
+<Route path='/material' element={<Material/>}></Route>
 </Routes>
 
 
