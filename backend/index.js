@@ -727,11 +727,14 @@ app.get('/calculateTotalQuantity', (req, res) => {
       GROUP BY Product_ID
     ) pr ON p.Product_ID = pr.Product_ID
     LEFT JOIN (
-      SELECT Product_ID, SUM(Quantity) AS orderItemQuantity
-      FROM order_item
-      GROUP BY Product_ID
+      SELECT oi.Product_ID, SUM(oi.Quantity) AS orderItemQuantity
+      FROM order_item oi
+      JOIN customer_order co ON oi.Order_ID = co.Order_ID
+      WHERE co.Approval = 1
+      GROUP BY oi.Product_ID
     ) oi ON p.Product_ID = oi.Product_ID
   `;
+
 
   db.query(sql, (err, result) => {
     if (err) {
