@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProfilenavBar from '../../component/ProfilenavBar';
+
 import { Table, Form } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
@@ -53,18 +54,19 @@ function CusPayment() {
   return (
     <div>
       <div>
-        <ProfilenavBar />
+        <ProfilenavBar userType="customer"/>
       </div>
 
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
+      <div style={{ textAlign: 'center', padding: '20px', width: 'fit-content', margin: 'auto' }}>
         <h1>Payments</h1>
       </div>
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>Order Number</th>
-              <th>
+      <div style={{ textAlign: 'center', padding: '20px', width: 'fit-content', margin: 'auto' }}>
+        <Table striped bordered hover className="table" style={{ borderColor: 'black', borderWidth: '2px', borderStyle: 'solid' }}>
+          <thead className="table-header">
+
+            <tr >
+              <th style={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px',width: '100px'}}>Order Number</th>
+              <th style={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <div>Product</div>
         <div>
@@ -77,12 +79,12 @@ function CusPayment() {
         </div>
       </div>
               </th>
-              <th>Total Payment(Rs)</th>
-              <th>Deliver Date</th>
-              <th>Status</th>
+              <th style={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px' }}>Total Payment(Rs)</th>
+              <th style={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px' }}>Deliver Date</th>
+              <th style={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px' }}>Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody style={{textAlign: 'center',fontSize: '18px'}} >
             {orders.map((customer_order) => (
              <tr key={customer_order.Order_ID}>
                 <td>{customer_order.Order_ID}</td>
@@ -91,8 +93,8 @@ function CusPayment() {
           const [name, qty, value] = item.split(' - ');
           return (
             <div key={index}>
-              <span style={{ display: 'inline-block', width: '200px' }}>{name}</span>
-              <span style={{ display: 'inline-block', width: '100px' }}>{qty}</span>
+              <span style={{ display: 'inline-block', width: '150px',textAlign: 'left' }}>{name}</span>
+              <span style={{ display: 'inline-block', width: '100px',textAlign: 'left' }}>{qty}</span>
               <span>{value}</span>
             </div>
           );

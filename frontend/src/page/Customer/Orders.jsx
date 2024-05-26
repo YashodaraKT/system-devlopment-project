@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import ProfilenavBar from '../../component/ProfilenavBar';
-import { Modal, Button, Form } from 'react-bootstrap';
+import { Modal, Button, Form,Tooltip, OverlayTrigger} from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 
 function CusPayment() {
@@ -93,13 +96,14 @@ function CusPayment() {
 
       console.log('Order data:', orderData);
       await axios.post('http://localhost:8081/enter_customer_order', orderData);
-      alert('Order placed successfully!');
+      toast.success('Order placed successfully!');
       setFormFields([{ product: '', quantity: '' }]);
       setDeliverDate('');
       setOrderValue(0);
       fetchCustomerOrders();
     } catch (error) {
       console.error('Error submitting order:', error);
+      toast.error('Error submitting order.');
     }
   };
 
@@ -107,15 +111,15 @@ function CusPayment() {
     <div>
 
       <div>
-        <ProfilenavBar />
+        <ProfilenavBar userType="customer"/>
       </div>
-
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
+       <br/>
+       <br/>
+      <div style={{ textAlign: 'center' }}>
         <h1>Orders</h1>
       </div>
-
-      <div style={{ marginLeft: '60px', border: '1px solid black', padding: '20px', width: 'fit-content' }}>
-        <Form onSubmit={handleSubmit}>
+      <div style={{ margin: 'auto', border: '1px solid black', padding: '20px', width: 'fit-content',fontSize:'20px' }}>
+  <Form onSubmit={handleSubmit}>
           {formFields.map((field, index) => (
             <div key={index} className="d-flex flex-row align-items-center mb-3">
               <Form.Group className="flex-fill" controlId={`formBasicType${index}`}>
@@ -146,7 +150,7 @@ function CusPayment() {
               </Form.Group>
 
               {index === formFields.length - 1 && (
-                <Button variant="info" onClick={addFormField} className="ms-2">
+                <Button variant="secondary" onClick={addFormField} className="ms-2" title="Add more products">
                   +
                 </Button>
               )}
@@ -164,15 +168,22 @@ function CusPayment() {
             />
           </Form.Group>
 
-          <Button variant="primary" type="submit">
-            Submit
-          </Button>
+          
+
+          <OverlayTrigger
+          placement="top"
+          overlay={<Tooltip id="tooltip-submit">Submit your order</Tooltip>}>
+            <Button variant="primary" type="submit" className="submit-button" style={{ backgroundColor: '#1F618D', textAlign: 'center' }}>
+           Submit
+           </Button>
+</OverlayTrigger>
         </Form>
 
         <div style={{ marginTop: '20px' }}>
           <h3>Order Value: Rs {ordervalue.toFixed(2)}</h3>
         </div>
       </div>
+      <ToastContainer className="custom-toast-container" />
     </div>
   );
 }

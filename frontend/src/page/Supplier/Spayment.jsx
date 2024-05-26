@@ -5,6 +5,7 @@ import axios from 'axios';
 import moment from 'moment';
 
 function Spayment() {
+  
   const [supplies, setSupplies] = useState([]);
   const [supplierId, setSupplierId] = useState(null);
   const [monthlyPayments, setMonthlyPayments] = useState({});

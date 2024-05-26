@@ -44,11 +44,11 @@ function Desc() {
               <Accordion.Header>If you are a supplier,</Accordion.Header>
               <Accordion.Body style={{ textAlign: 'justify' }}>
                 <ul style={{ listStyleType: 'none' }}>
-              <li> <img src={image1} alt="Image 1" style={{ width: '150px', height: '150px' }}/>
+              <li> <img src={image1} alt="Image 1" style={{ width: '125px', height: '125px' }}/>
               View own payments for the past two months.</li>
-              <li><img src={image2} alt="Image 2" style={{ width: '150px', height: '150px' }}/>
+              <li><img src={image2} alt="Image 2" style={{ width: '125px', height: '125px' }}/>
                 Check payment status (payable/paid).</li>
-              <li><img src={image3} alt="Image 3" style={{ width: '150px', height: '150px' }}/>
+              <li><img src={image3} alt="Image 3" style={{ width: '125px', height: '125px' }}/>
                 Ability to submit requests for transport.</li>
               </ul>
               </Accordion.Body>
@@ -57,15 +57,15 @@ function Desc() {
               <Accordion.Header>If you are a customer,</Accordion.Header>
               <Accordion.Body style={{ textAlign: 'justify' }}>
               <ul style={{ listStyleType: 'none' }}>
-                <li> <img src={image4} alt="Image 4" style={{ width: '150px', height: '150px' }}/>
+                <li> <img src={image4} alt="Image 4" style={{ width: '125px', height: '125px' }}/>
                   Modify scheduled orders at the beginning of month.</li>
-                <li><img src={image5} alt="Image 5" style={{ width: '150px', height: '150px' }}/>
+                <li><img src={image5} alt="Image 5" style={{ width: '125px', height: '125px' }}/>
                   Have the option to place additional orders.</li>
-                <li><img src={image6} alt="Image 6" style={{ width: '150px', height: '150px' }}/>
+                <li><img src={image6} alt="Image 6" style={{ width: '125px', height: '125px' }}/>
                   View current month payments.</li>
-                <li><img src={image7} alt="Image 7" style={{ width: '150px', height: '150px' }}/>
+                <li><img src={image7} alt="Image 7" style={{ width: '125px', height: '125px' }}/>
                   Review payment history and search by date range.</li>
-                <li><img src={image8} alt="Image 8" style={{ width: '150px', height: '150px' }}/>
+                <li><img src={image8} alt="Image 8" style={{ width: '125px', height: '125px' }}/>
                   Receive reminders for pending payments before 5 days.</li>
               </ul>
               </Accordion.Body>

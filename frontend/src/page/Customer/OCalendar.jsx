@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
+import ProfilenavBar from '../../component/ProfilenavBar';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
@@ -57,10 +58,10 @@ function OCalendar() {
       color = 'green'; // Change color to green for Approval value 1
       break;
     case 10:
-      color = 'blue'; // Change color to blue for Approval value 10
+      color = '#008ECC'; // Change color to blue for Approval value 10
       break;
     default:
-      color = 'blue'; // Default color if Approval value is not 0, 1, or 10
+      color = '#008ECC'; // Default color if Approval value is not 0, 1, or 10
   }
     
             return {
@@ -95,33 +96,38 @@ function OCalendar() {
   const handleClose = () => setShowModal(false);
 
 
-
-
-
-
   return (
     <div>
-
-<div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <h1>Orders</h1>
+       <div>
+        <ProfilenavBar userType="customer"/>
       </div>
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <h2>Delivery Calendar</h2>
-
-        <div style={{ border: '1px solid gray', padding: '10px', borderRadius: '5px' }}>
+   
+     
+     <div style={{ textAlign: 'center', padding: '20px', width: 'fit-content', margin: 'auto' }}>
+        <h2> Calendar</h2>
+        <br/>
+        <div style={{ textAlign: 'center', padding: '20px', width: 'fit-content', margin: 'auto',border: '2px solid black', padding: '10px', borderRadius: '5px' }}>
         <Calendar
   localizer={localizer}
   events={events}
   startAccessor="start"
   endAccessor="end"
-  style={{ height: 500, width: '80vw' }}
+  style={{ height: 500, width: '80vw',fontSize: '18px' }}
   onSelectEvent={handleEventClick}
   eventPropGetter={event => ({
     style: {
       backgroundColor: event.color,
     },
   })}
-  views={['month']} // Set to display only the month view
+  views={['month','agenda']} 
+  dayPropGetter={(date) => {
+    return {
+      style: {
+        border: '1px solid black', // Set border width and color
+      },
+    };
+  }}
+  
 />
         </div>
 

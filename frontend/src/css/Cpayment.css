@@ -1,0 +1,53 @@
+/* CusPayment.css */
+.table-header {
+    background-color: #1F618D;
+    color: #ffffff;
+    text-align: center;
+    font-size: 18px;
+  }
+  
+  .table-header th {
+    width: 150px;
+    
+  }
+  
+  .table-header th:nth-child(2) {
+    width: 400px;
+  }
+
+  .table-header th:nth-child(1) {
+    width: 100px;
+  }
+  
+  .table-body {
+    text-align: center;
+    font-size: 18px;
+    
+  }
+  
+  .product-item {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .product-item span {
+    display: inline-block;
+  }
+  
+  .product-item .name {
+    width: 200px;
+    text-align: left;
+  }
+  
+  .product-item .quantity {
+    width: 100px;
+  }
+  
+  #table {
+    border: 2px solid black;
+}
+
+/* Set border color for table rows and cells */
+.table td, .table th {
+    border: 2px solid black;
+}

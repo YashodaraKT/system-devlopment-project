@@ -1,38 +1,44 @@
 .logsignup-container {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-    height: 100vh;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-  
-  .logsignup-form {
-    background-color: transparent;
-    padding: 20px;
-    border: 2px solid black;
-    border-radius: 10px;
-    width: 25%;
-    margin-left: auto; /* This will push the form to the right */
-    margin-right: 250px; /* This will ensure there's no space to the right of the form */
-  }
-  
-  
-  .logsignup-form h1 {
-    margin-bottom: 20px;
-    
-  }
-  
-  .logsignup-input {
-    margin-top: 20px;
-  }
-  .logsignup-input label {
-    font-size: 1.2em; /* Adjust font size as needed */
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-  .logsignup-button {
-    margin-top: 20px; 
+.logsignup-form {
+  background-color: transparent;
+  padding: 40px;
+  border: 2px solid black;
+  border-radius: 5px;
+  width: 25%;
+  margin-left: auto; 
+  margin-right: 150px; 
+}
+
+.logsignup-form h1 {
+  margin-bottom: 20px;
+}
+
+.logsignup-input {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.logsignup-input label {
+  font-size: 1.2em; 
+  margin-bottom: 5px; /* Adds space between the label and the input field */
+}
+
+.logsignup-input input {
+  margin-top: 5px; /* Optionally, you can add margin to the input field itself */
+}
+
+.logsignup-button {
+  margin-top: 30px; 
 }
 
 .logsignup-image {

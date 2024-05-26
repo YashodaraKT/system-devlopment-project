@@ -8,7 +8,7 @@ import { FaSearch } from 'react-icons/fa'; // Import the search icon from react-
 function Hnbar() {
   const navbarStyle = {
     backgroundColor: '#CCCCCC',
-    fontSize: '25px', // Adjust the font size as needed
+    fontSize: '25px', 
     color: 'white'
   };
 
@@ -19,18 +19,21 @@ function Hnbar() {
 
   return (
     <div>
-       <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-          <img src={NImage} alt="Your Image" style={{ height: '125px', width: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', top: '0', right: '0', padding: '10px', display: 'flex', alignItems: 'center' }}>
-            <FaSearch style={{ marginRight: '5px', color: 'white' }} /> {/* Render the search icon with white color */}
-            <input type="text" placeholder="Search..." style={{ padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }} />
-          </div>
+      <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+        <img src={NImage} alt="Your Image" style={{ height: '125px', width: '100%', objectFit: 'cover' }} />
+        <div style={{ position: 'absolute', top: '0', right: '0', padding: '10px', display: 'flex', alignItems: 'center' }}>
+          <FaSearch style={{ marginRight: '5px', color: 'white' }} /> {/* Render the search icon with white color */}
+          <input type="text" placeholder="Search..." style={{ padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }} />
         </div>
+      </div>
       <Navbar style={navbarStyle} variant="dark">
         <Container>
           <Navbar.Brand style={navbarStyle}>Omega</Navbar.Brand>
           <Nav className="me-auto">
-          <Nav.Link style={navLinkStyle} href="login">Our Products</Nav.Link>
+          <Nav.Link style={navLinkStyle} href="/">Home</Nav.Link>
+          <Nav.Link style={navLinkStyle} href="products">Our Products</Nav.Link>
+          </Nav>
+          <Nav>
             <Nav.Link style={navLinkStyle} href="login">Login</Nav.Link>
           </Nav>
         </Container>
@@ -40,4 +43,3 @@ function Hnbar() {
 }
 
 export default Hnbar;
-
