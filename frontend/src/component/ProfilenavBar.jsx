@@ -52,6 +52,7 @@ function ProfilenavBar({ userType }) {
           <Navbar.Brand style={navbarStyle}>Omega</Navbar.Brand>
           <Nav className="me-auto">
             <Nav.Link style={navLinkStyle} href={profileLink}>Profile</Nav.Link>
+            <Nav.Link style={navLinkStyle} href="/changepw">Change Password</Nav.Link> 
             <Nav.Link style={navLinkStyle} href="s">Settings</Nav.Link>
           </Nav>
         </Container>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
+import AdminBar from '../../component/AdminBar';
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function ViewOrders() {
   const [orders, setOrders] = useState([]);
@@ -37,6 +39,10 @@ function ViewOrders() {
 
   return (
     <div>
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
         <h1>Customer Orders</h1>
       </div>
@@ -105,6 +111,8 @@ function ViewOrders() {
           </tbody>
         </Table>
       </div>
+    </div>
+    </div>
     </div>
   );
 }

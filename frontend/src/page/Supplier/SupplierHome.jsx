@@ -3,6 +3,7 @@ import {Button, Container,Card,Row,Col} from 'react-bootstrap';
 import h1Image from '../../assets/h1.png'; 
 import ProfilenavBar from '../../component/ProfilenavBar';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../../component/Footer';
 
 
 function SupplierHome() {
@@ -10,7 +11,7 @@ function SupplierHome() {
   const Navigate= useNavigate();
   return (
     <>
-       <div><ProfilenavBar/></div>
+       <div><ProfilenavBar userType="supplier"/></div>
 
 <br></br>
 <br></br>
@@ -18,7 +19,7 @@ function SupplierHome() {
         <Container>
           <Row>
             <Col xs={6} md={4}>
-              <Card style={{ width: '18rem' }}>
+              <Card style={{ width: '18rem',border: '2px solid black'  }}>
                 <Card.Img variant="top" src={h1Image} />
                 <Card.Body>
                   <Card.Title>Transport</Card.Title>
@@ -31,7 +32,7 @@ function SupplierHome() {
             </Col>
 
             <Col xs={6} md={4}>
-              <Card style={{ width: '18rem' }}>
+              <Card style={{ width: '18rem',border: '2px solid black'  }}>
                 <Card.Img variant="top" src={h1Image} />
                 <Card.Body>
                   <Card.Title>Payments</Card.Title>
@@ -47,7 +48,11 @@ function SupplierHome() {
           </Row>
         </Container>
       </div>
+      <br/>
+      <br/>
+      <div><Footer /></div>
     </>
+    
   ); 
 }
 

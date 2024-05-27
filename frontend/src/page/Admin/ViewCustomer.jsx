@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Container, Button } from 'react-bootstrap';
 import CustomerRegistration from '../../component/CustomerRegistration';
+import UpdateCustomer from '../../component/UpdateCustomer'; 
 import AdminBar from '../../component/AdminBar';
-import UpdateCustomer from '../../component/UpdateCustomer'; // Import the new modal
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function ViewCustomer() {
   const [modalShow, setModalShow] = useState(false);
@@ -27,8 +28,11 @@ function ViewCustomer() {
 
   return (
     <div>
-      <div><AdminBar /></div>
-      <Container className="mt-5">
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
+          <Container className="mt-5">
         <h1>Registered Customers</h1>
         <Button variant="primary" onClick={() => setModalShow(true)}>
           Add Customers
@@ -79,6 +83,8 @@ function ViewCustomer() {
           />
         )}
       </Container>
+    </div>
+    </div>
     </div>
   );
 }

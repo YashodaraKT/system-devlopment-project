@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import moment from 'moment';
+import AdminBar from '../../component/AdminBar';
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function AppointmentList() {
   const [appointments, setAppointments] = useState([]);
@@ -39,6 +41,11 @@ function AppointmentList() {
   };
 
   return (
+    <div>
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}></div>
     <div className="container">
       <table className="table">
         <thead>
@@ -96,6 +103,7 @@ function AppointmentList() {
         </tbody>
       </table>
     </div>
+    </div></div>
   );
 }
 

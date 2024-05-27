@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Button, Form } from 'react-bootstrap';
 import EditProduct from '../../component/EditProduct';
+import AdminBar from '../../component/AdminBar';
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function ProductList() {
   const [products, setProducts] = useState([]);
@@ -59,6 +61,10 @@ function ProductList() {
 
   return (
     <div>
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
       <h1>Product List</h1>
       <Table striped bordered hover>
         <thead>
@@ -140,6 +146,8 @@ function ProductList() {
           }}
         />
       )}
+    </div>
+    </div>
     </div>
   );
 }

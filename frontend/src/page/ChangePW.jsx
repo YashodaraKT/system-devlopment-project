@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
 import '../css/ChangePW.css'; 
+import Footer from '../component/Footer';
+
 
 const ChangePW = () => {
   const [username, setUsername] = useState('');
@@ -29,11 +31,15 @@ const ChangePW = () => {
   };
 
   return (
+    <div>
     <Container className="mt-5">
-      <Row className="justify-content-center">
-        <Col md={6}>
-          <div className="custom-form-container">
-            <h2 className="mb-4">Change Password</h2>
+    <Row className="justify-content-center align-items-center">
+      <Col md={6} className="text-center">
+        <img src={require('../assets/cpw.jpg')} alt="Background" className="img-fluid" />
+      </Col>
+      <Col md={6}>
+        <div className="custom-form-container">
+          <h2 className="mb-4">Change Password</h2>
             <Form onSubmit={handleSubmit}>
               <Form.Group controlId="username">
                 <Form.Label>Username:</Form.Label>
@@ -62,7 +68,7 @@ const ChangePW = () => {
                 />
               </Form.Group>
               <br/>
-              <br/>
+             
               <Button variant="primary" type="submit" className="w-100">
                 Change Password
               </Button>
@@ -73,7 +79,12 @@ const ChangePW = () => {
         </Col>
       </Row>
     </Container>
+
+    <br/><br/>
+    <div><Footer /></div>
+    </div>
   );
+
 };
 
 export default ChangePW;

@@ -67,7 +67,7 @@ function Spayment() {
   return (
     <div>
       <div>
-        <ProfilenavBar />
+      <div><ProfilenavBar userType="supplier"/></div>
       </div>
 
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>

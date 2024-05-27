@@ -3,7 +3,8 @@ import axios from 'axios';
 import { Table, Container, Button } from 'react-bootstrap';
 import SupplierRegistration from '../../component/SupplierRegistration';
 import AdminBar from '../../component/AdminBar';
-import UpdateSupplier from '../../component/UpdateSupplier'; // Import the new modal
+import UpdateSupplier from '../../component/UpdateSupplier'; 
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function ViewSupplier() {
   const [modalShow, setModalShow] = useState(false);
@@ -40,8 +41,11 @@ function ViewSupplier() {
 
   return (
     <div>
-      <div><AdminBar /></div>
-      <Container className="mt-5">
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
+          <Container className="mt-5">
         <h1>Registered Suppliers</h1>
         <Button variant="primary" onClick={() => setModalShow(true)}>
           Add Supplier
@@ -95,6 +99,8 @@ function ViewSupplier() {
           />
         )}
       </Container>
+      </div>
+    </div>
     </div>
   );
 }

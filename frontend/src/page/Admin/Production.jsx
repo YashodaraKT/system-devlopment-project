@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Container, Button, Modal } from 'react-bootstrap';
-import AdminBar from '../../component/AdminBar';
 import ProductInv from '../../component/ProductInv';
+import AdminBar from '../../component/AdminBar';
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function Production() {
   const [productions, setProductions] = useState([]);
@@ -68,7 +69,10 @@ function Production() {
 
   return (
     <div>
-      <AdminBar />
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
       <Container className="mt-5">
         <h1>Production Records</h1>
         <Button variant="secondary" onClick={handleShowProductInv}>Product Inventory</Button>
@@ -147,6 +151,8 @@ function Production() {
           </Button>
         </Modal.Footer>
       </Modal>
+    </div>
+    </div>
     </div>
   );
 }

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Table, Button, Form } from "react-bootstrap";
 import axios from "axios";
 import moment from "moment";
+import AdminBar from '../../component/AdminBar';
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function NewOrders() {
   const [orders, setOrders] = useState([]);
@@ -84,6 +86,10 @@ function NewOrders() {
 
   return (
     <div>
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
       <div style={{ marginLeft: "50px", padding: "20px", width: "fit-content" }}>
         <h1>Customer Orders</h1>
       </div>
@@ -138,6 +144,8 @@ function NewOrders() {
           </tbody>
         </Table>
       </div>
+    </div>
+    </div>
     </div>
   );
 }

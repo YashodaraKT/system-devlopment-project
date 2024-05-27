@@ -4,6 +4,7 @@ import { Table, Container, Button } from 'react-bootstrap';
 import StaffRegistration from '../../component/StaffRegistration';
 import AdminBar from '../../component/AdminBar';
 import UpdateStaff from '../../component/UpdateStaff';
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function ViewStaff() {
   const [modalShow, setModalShow] = useState(false);
@@ -27,8 +28,11 @@ function ViewStaff() {
 
   return (
     <div>
-      <div><AdminBar/></div>
-      <Container className="mt-5"> 
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
+          <Container className="mt-5">
         <h1>Registered staff members</h1>
         <Button variant="primary" onClick={() => setModalShow(true)}>
           Add Staff
@@ -76,6 +80,8 @@ function ViewStaff() {
           />
         )}
       </Container>
+    </div>
+    </div>
     </div>
   );
 }

@@ -87,19 +87,20 @@ function Transport() {
 
   return (
     <div>
-      <ProfilenavBar />
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
+      <div><ProfilenavBar userType="supplier"/></div>
+
+      <div style={{ textAlign: 'center' }}>
         <h1>Transport</h1>
       </div>
       <div style={{ marginLeft: '50px', display: 'inline-block' }}>
-        <Button variant="success" onClick={handleShowScheduledAppointments} style={{ marginLeft: '20px' }}>
+        <Button variant="info" onClick={handleShowScheduledAppointments} style={{ marginLeft: '315px' }}>
           Appointments
         </Button>
       </div>
 
       <br />
       <br />
-      <div style={{ marginLeft: '60px', border: '1px solid black', padding: '20px', width: 'fit-content' }}>
+      <div style={{ margin: 'auto', border: '2px solid black', padding: '20px', width: 'fit-content',fontSize:'20px' }}>
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3" controlId="formBasicPermanent">
             <Form.Label>Are you requesting transport permanently?</Form.Label>
@@ -134,7 +135,7 @@ function Transport() {
             </>
           )}
 
-          <Button variant="primary" type="submit">
+          <Button variant="success" type="submit">
             Submit
           </Button>
         </Form>

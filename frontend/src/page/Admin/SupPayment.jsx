@@ -4,6 +4,8 @@ import axios from 'axios';
 import moment from 'moment';
 import NewSupply from '../../component/NewSupply';
 import SupplyPrice from '../../component/SupplyPrice';
+import AdminBar from '../../component/AdminBar';
+import ProfilenavBar from '../../component/ProfilenavBar';
 
 function ViewSupplierPayments() {
   const [supplies, setSupplies] = useState([]);
@@ -74,6 +76,10 @@ function ViewSupplierPayments() {
 
   return (
     <div>
+     <div><ProfilenavBar userType="admin" /></div>
+      <div style={{ display: 'flex' }}>
+        <div><AdminBar /></div>
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
         <h1>Supplier Payments</h1>
         <Button variant="secondary" onClick={handleShowNewPopup} style={{ marginRight: '10px' }}>
@@ -132,6 +138,8 @@ function ViewSupplierPayments() {
   priceWithoutTransport={priceWithoutTransport}
   priceWithTransport={priceWithTransport}
 />
+    </div>
+    </div>
     </div>
   );
 }
