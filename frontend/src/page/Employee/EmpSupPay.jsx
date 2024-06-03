@@ -4,7 +4,7 @@ import axios from 'axios';
 import moment from 'moment';
 import NewSupply from '../../component/NewSupply';
 import SupplyPrice from '../../component/SupplyPrice';
-import AdminBar from '../../component/AdminBar';
+import EmpBar from '../../component/EmpBar';
 import ProfilenavBar from '../../component/ProfilenavBar';
 
 function ViewSupplierPayments() {
@@ -124,9 +124,9 @@ function ViewSupplierPayments() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="admin" /></div>
+      <div><ProfilenavBar userType="employee" /></div>
   <div style={{ display: 'flex' }}>
-    <div><AdminBar /></div>
+    <div><EmpBar /></div>
     <div style={{ marginLeft: '20px', flexGrow: 1 }}>
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
         <h1 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

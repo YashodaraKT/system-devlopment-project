@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Container, Form, Button } from 'react-bootstrap';
 import RMinv from '../../component/RMinv';
-import AdminBar from '../../component/AdminBar';
+import EmpBar from '../../component/EmpBar';
 import ProfilenavBar from '../../component/ProfilenavBar';
 
 function RawMaterial() {
@@ -102,9 +102,9 @@ function RawMaterial() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="admin" /></div>
+      <div><ProfilenavBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
-        <div><AdminBar /></div>
+        <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>
           <Container className="mt-5">
             <h1>Raw Material Inventory</h1>

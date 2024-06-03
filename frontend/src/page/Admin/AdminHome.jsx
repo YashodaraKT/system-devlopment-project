@@ -1,15 +1,19 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import  ProfilenavBar from '../../component/ProfilenavBar';
 import AdminBar from '../../component/AdminBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import InvPieChart from '../../component/PieChart';
 
 function AdminHome() {
-    const Navigate= useNavigate();
-
   return (
     <div>
-      <div><ProfilenavBar userType="admin" /></div>
-      <div><AdminBar/></div>
+      <ProfilenavBar userType="admin" />
+      <div style={{ display: 'flex' }}>
+        <AdminBar />
+        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
+          <InvPieChart />
+        </div>
+        
+      </div>
     </div>
   );
 }

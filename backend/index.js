@@ -143,12 +143,13 @@ app.post('/user', async (req, res) => {
 
 //-------------------- Register Supplier
 
+// app.post('/supplier' route in your backend
 app.post('/supplier', async (req, res) => {
-  const { Name, Address1, Address2, Contact_Number, Transport, User_ID,Location_Id } = req.body;
+  const { Name, Address1, Address2, Contact_Number, Transport, User_ID, R_User_ID, Location_Id } = req.body;
   try {
     const result = await db.query(
-      'INSERT INTO supplier (Name, Address1, Address2, Contact_Number, Transport,Location_Id, User_ID) VALUES (?, ?, ?, ?, ?,?, LAST_INSERT_ID() )',
-      [Name, Address1, Address2, Contact_Number, Transport, Location_Id,User_ID]
+      'INSERT INTO supplier (Name, Address1, Address2, Contact_Number, Transport, Location_Id, User_ID, R_User_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [Name, Address1, Address2, Contact_Number, Transport, Location_Id, User_ID, R_User_ID]
     );
 
     res.status(201).send("Supplier registered successfully");
@@ -417,19 +418,66 @@ app.put("/Approval_orders/:orderId", (req, res) => {
         }
         console.log("Record inserted into approved_order:", result);
       });
+
+      // Update the In_Stock value in the product table
+      const sqlGetOrderItems = `SELECT Product_ID, Quantity FROM order_item WHERE Order_ID = ?`;
+
+      db.query(sqlGetOrderItems, [orderId], (err, orderItems) => {
+        if (err) {
+          console.error("Error fetching order items:", err);
+          return res.status(500).json({ error: "Internal Server Error" });
+        }
+
+        const updatePromises = orderItems.map(item => {
+          const updateStockSql = `
+            UPDATE product
+            SET In_Stock = In_Stock - ?
+            WHERE Product_ID = ?
+          `;
+
+          return new Promise((resolve, reject) => {
+            db.query(updateStockSql, [item.Quantity, item.Product_ID], (updateErr, updateResult) => {
+              if (updateErr) {
+                reject(updateErr);
+              } else {
+                resolve(updateResult);
+              }
+            });
+          });
+        });
+
+        Promise.all(updatePromises)
+          .then(() => {
+            // Update the customer_order table
+            const sqlUpdateOrder = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+
+            db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
+              if (err) {
+                console.error("Error updating order:", err);
+                return res.status(500).json({ error: "Internal Server Error" });
+              }
+              console.log("Order updated:", result);
+              return res.json({ message: "Order updated successfully" });
+            });
+          })
+          .catch(updateErr => {
+            console.error("Error updating stock:", updateErr);
+            return res.status(500).json({ error: "Internal Server Error" });
+          });
+      });
+    } else {
+      // Update the customer_order table
+      const sqlUpdateOrder = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+
+      db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
+        if (err) {
+          console.error("Error updating order:", err);
+          return res.status(500).json({ error: "Internal Server Error" });
+        }
+        console.log("Order updated:", result);
+        return res.json({ message: "Order updated successfully" });
+      });
     }
-
-    // Update the customer_order table
-    const sqlUpdateOrder = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
-
-    db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
-      if (err) {
-        console.error("Error updating order:", err);
-        return res.status(500).json({ error: "Internal Server Error" });
-      }
-      console.log("Order updated:", result);
-      return res.json({ message: "Order updated successfully" });
-    });
   });
 });
 
@@ -495,7 +543,13 @@ app.post('/enter_customer_order', async (req, res) => {
 //----------view supplier
 
 app.get('/viewsupplier', (req, res) => {
-  db.query('SELECT * FROM supplier', (err, result) => {
+  const query = `
+    SELECT s.*, 
+           COALESCE(CONCAT(staff.Staff_ID, ' - ', staff.Name), 'Admin') as RegisteredBy 
+    FROM supplier s
+    LEFT JOIN staff ON s.R_User_ID = staff.User_ID
+  `;
+  db.query(query, (err, result) => {
     if (err) {
       res.status(500).send(err);
     } else {
@@ -503,6 +557,7 @@ app.get('/viewsupplier', (req, res) => {
     }
   });
 });
+
 //------Update Supplier
 
 app.put('/updatesupplier/:id', (req, res) => {
@@ -580,9 +635,27 @@ app.put('/updatestaffcontact/:id', (req, res) => {
 //-------------------------Spayment View---------------------------------------
 app.get('/supplier_payments', (req, res) => {
   const query = `
-    SELECT s.Supply_ID, s.Supplier_ID, su.Name, su.Contact_Number, s.Date,s.Quantity, s.Payment, s.Payment_Status
-    FROM supply AS s
-    INNER JOIN supplier AS su ON s.Supplier_ID = su.Supplier_ID
+    SELECT 
+      s.Supply_ID, 
+      s.Supplier_ID, 
+      su.Name, 
+      su.Contact_Number, 
+      s.Date,
+      s.Quantity, 
+      s.Payment, 
+      s.Payment_Status,
+      s.R_User_ID,
+      COALESCE(CONCAT(st1.Staff_ID, ' - ', st1.Name), 'Admin') AS RegisteredBy,
+      s.U_User_ID,
+      COALESCE(CONCAT(st2.Staff_ID, ' - ', st2.Name), 'Admin') AS PaidBy
+    FROM 
+      supply AS s
+    INNER JOIN 
+      supplier AS su ON s.Supplier_ID = su.Supplier_ID
+    LEFT JOIN 
+      staff AS st1 ON s.R_User_ID = st1.User_ID
+    LEFT JOIN 
+      staff AS st2 ON s.U_User_ID = st2.User_ID
   `;
 
   db.query(query, (err, result) => {
@@ -593,18 +666,22 @@ app.get('/supplier_payments', (req, res) => {
     }
   });
 });
+
+
 //-------------------------Spayment done---------------------------------------
 app.put('/approved_supplier_payments/:id', (req, res) => {
   const supplyId = req.params.id;
-  const { Payment_Status } = req.body;
+  const { Payment_Status, U_User_ID, Payment_Date } = req.body;
 
   const query = `
     UPDATE supply
-    SET Payment_Status = ?
+    SET Payment_Status = ?,
+        U_User_ID = ?,
+        Payment_Date = ?
     WHERE Supply_ID = ?
   `;
 
-  db.query(query, [Payment_Status, supplyId], (err, result) => {
+  db.query(query, [Payment_Status, U_User_ID, Payment_Date, supplyId], (err, result) => {
     if (err) {
       res.status(500).send({ message: err.message });
     } else {
@@ -612,6 +689,7 @@ app.put('/approved_supplier_payments/:id', (req, res) => {
     }
   });
 });
+
 //------------------------------Enter the supplies---------------------
 app.get('/find_supplier', (req, res) => {
   const { name, contact } = req.query;
@@ -636,15 +714,13 @@ app.get('/find_supplier', (req, res) => {
 });
 
 
-
-
 app.post('/add_supply', (req, res) => {
-  const { Supplier_ID, Quantity, Payment, Date } = req.body;
+  const { Supplier_ID, Quantity, Payment, Date, R_User_ID } = req.body;
   const query = `
-    INSERT INTO supply (Supplier_ID, Quantity, Payment, Date, Payment_Status)
-    VALUES (?, ?, ?, ?, 0)
+    INSERT INTO supply (Supplier_ID, Quantity, Payment, Date, Payment_Status, R_User_ID)
+    VALUES (?, ?, ?, ?, 0, ?)
   `;
-  db.query(query, [Supplier_ID, Quantity, Payment, Date], (err, result) => {
+  db.query(query, [Supplier_ID, Quantity, Payment, Date, R_User_ID], (err, result) => {
     if (err) {
       res.status(500).send({ message: err.message });
     } else {
@@ -652,6 +728,7 @@ app.post('/add_supply', (req, res) => {
     }
   });
 });
+
 
 //-----------------------------
 
@@ -676,9 +753,17 @@ app.post('/transport/request', (req, res) => {
 // Assuming you're using Express and MySQL
 app.get('/viewproduction', (req, res) => {
   const sql = `
-    SELECT p.Product_Name, pr.Date, pr.Quantity 
-    FROM production pr
-    JOIN product p ON pr.Product_ID = p.Product_ID
+    SELECT 
+      p.Product_Name, 
+      pr.Date, 
+      pr.Quantity, 
+      COALESCE(CONCAT(st.Staff_ID, ' - ', st.Name), 'Admin') AS EnteredBy
+    FROM 
+      production pr
+    JOIN 
+      product p ON pr.Product_ID = p.Product_ID
+    LEFT JOIN
+      staff st ON pr.A_User_ID = st.User_ID
   `;
   db.query(sql, (err, result) => {
     if (err) {
@@ -689,18 +774,25 @@ app.get('/viewproduction', (req, res) => {
   });
 });
 
+
+
+
 // Assuming you're using Express and MySQL
 app.post('/addproduction', (req, res) => {
-  const { Product_ID, Date, Quantity } = req.body;
-  const sql = 'INSERT INTO production (Product_ID, Date, Quantity) VALUES (?, ?, ?)';
-  db.query(sql, [Product_ID, Date, Quantity], (err, result) => {
+  const { Product_ID, Date, Quantity, A_User_ID } = req.body;
+
+  // SQL query to insert the new production record including A_User_ID
+  const sql = 'INSERT INTO production (Product_ID, Date, Quantity, A_User_ID) VALUES (?, ?, ?, ?)';
+
+  db.query(sql, [Product_ID, Date, Quantity, A_User_ID], (err, result) => {
     if (err) {
-      res.status(500).send(err);
+      res.status(500).send({ message: err.message });
     } else {
       res.status(200).send('Production added successfully');
     }
   });
 });
+
 
 // Endpoint to get products
 app.get('/productsdw', (req, res) => {
@@ -785,9 +877,11 @@ app.get('/getRawMaterialInventory', (req, res) => {
            rm.R_Name, 
            ri.Quantity, 
            ri.Date, 
-           ri.Action
+           ri.Action,
+           COALESCE(CONCAT(st.Staff_ID, ' - ', st.Name), 'Admin') AS EnteredBy
     FROM rawmaterial_inv ri
     JOIN rawmaterial rm ON ri.R_ID = rm.R_ID
+    LEFT JOIN staff st ON ri.A_User_ID = st.User_ID
   `;
   
   db.query(sql, (err, result) => {
@@ -798,9 +892,10 @@ app.get('/getRawMaterialInventory', (req, res) => {
     }
   });
 });
+
 //-----------------add or purchase RM
 app.post('/addRawMaterial', (req, res) => {
-  const { R_Name, Quantity, Date, Action } = req.body;
+  const { R_Name, Quantity, Date, Action,A_User_ID } = req.body;
   const getRIdQuery = `
     SELECT R_ID FROM rawmaterial WHERE R_Name = ?
   `;
@@ -814,13 +909,14 @@ app.post('/addRawMaterial', (req, res) => {
         return res.status(404).send('Raw material not found');
       }
       const R_ID = result[0].R_ID;
+
     
       const insertQuery = `
-        INSERT INTO rawmaterial_inv (R_ID, Quantity, Date, Action)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO rawmaterial_inv (R_ID, Quantity, Date, Action, A_User_ID)
+        VALUES (?, ?, ?, ?, ?)
       `;
       
-      db.query(insertQuery, [R_ID, Quantity, Date, Action], (err, result) => {
+      db.query(insertQuery, [R_ID, Quantity, Date, Action, A_User_ID], (err, result) => {
         if (err) {
           console.error('Error inserting raw material:', err);
           return res.status(500).send(err);
@@ -978,7 +1074,7 @@ app.post('/rawmaterials', (req, res) => {
   });
 });
 
-
+//************CHARTS */
 
 
 

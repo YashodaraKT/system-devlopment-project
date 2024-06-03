@@ -44,6 +44,9 @@ function SupplierRegistration(props) {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    const loggedInUserData = JSON.parse(localStorage.getItem('user'));
+  const ruserId = loggedInUserData.User_ID;
+
     // Form validation: Check if any field is blank
     if (!userName || !password || !name || !contactNumber || !address1 || !address2 || !transport || !selectedLocation) {
       toast.error("Please fill in all fields.");
@@ -71,6 +74,7 @@ function SupplierRegistration(props) {
           Transport: transport,
           Location_Id: selectedLocation, 
           User_ID: userId,
+          R_User_ID: ruserId 
         });
 
         // Show success notification

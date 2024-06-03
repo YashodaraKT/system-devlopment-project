@@ -23,6 +23,8 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
   const handleAddSupply = async (e) => {
     e.preventDefault();
     try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const R_User_ID = userData ? userData.User_ID : null;
       const supplierResponse = await axios.get('http://localhost:8081/find_supplier', {
         params: {
           name: newSupply.Supplier_Name,
@@ -44,7 +46,8 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
           Supplier_ID: supplierId,
           Quantity: newSupply.Quantity,
           Payment: payment,
-          Date: date
+          Date: date,
+          R_User_ID: R_User_ID
         };
 
         const addSupplyResponse = await axios.post('http://localhost:8081/add_supply', newSupplyData);

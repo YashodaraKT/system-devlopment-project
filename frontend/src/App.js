@@ -24,7 +24,11 @@ import RawMaterial from './page/Admin/RawMaterial';
 import Production from './page/Admin/Production';
 import Material from './page/Admin/Material';
 import Product from './page/Admin/Product';
-
+import EmpViewSupplier from './page/Employee/EmpViewSupplier';
+import EmpViewAppoi from './page/Employee/EmpViewAppoi';
+import EmpProduction from './page/Employee/EmpProduction';
+import EmpRawMaterial from './page/Employee/EmpRawMaterial';
+import EmpSupPay from './page/Employee/EmpSupPay';
 
 function App() {
   return (
@@ -54,6 +58,11 @@ function App() {
 <Route path='/rawmaterial' element={<RawMaterial/>}></Route>
 <Route path='/product' element={<Product/>}></Route>
 <Route path='/material' element={<Material/>}></Route>
+<Route path='/empviewsupplier' element={<EmpViewSupplier/>}></Route>
+<Route path='/empviewappoi' element={<EmpViewAppoi/>}></Route>
+<Route path='/empproduction' element={<EmpProduction/>}></Route>
+<Route path='/emprawmaterial' element={<EmpRawMaterial/>}></Route>
+<Route path='/empsuppay' element={<EmpSupPay/>}></Route>
 </Routes>
 
 

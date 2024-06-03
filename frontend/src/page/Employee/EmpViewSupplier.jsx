@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Container, Button } from 'react-bootstrap';
 import SupplierRegistration from '../../component/SupplierRegistration';
-import AdminBar from '../../component/AdminBar';
+import EmpBar from '../../component/EmpBar';
 import UpdateSupplier from '../../component/UpdateSupplier'; 
 import ProfilenavBar from '../../component/ProfilenavBar';
 
-function ViewSupplier() {
+function EmpViewSupplier() {
   const [modalShow, setModalShow] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -41,9 +41,9 @@ function ViewSupplier() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="admin" /></div>
+      <div><ProfilenavBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
-        <div><AdminBar /></div>
+        <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>
           <Container className="mt-5">
             <h1>Registered Suppliers</h1>
@@ -107,4 +107,5 @@ function ViewSupplier() {
   );
 }
 
-export default ViewSupplier;
+export default EmpViewSupplier;
+

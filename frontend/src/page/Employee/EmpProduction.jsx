@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Container, Button, Modal } from 'react-bootstrap';
 import ProductInv from '../../component/ProductInv';
-import AdminBar from '../../component/AdminBar';
+import EmpBar from '../../component/EmpBar';
 import ProfilenavBar from '../../component/ProfilenavBar';
 
 function Production() {
@@ -92,9 +92,9 @@ function Production() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="admin" /></div>
+      <div><ProfilenavBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
-        <div><AdminBar /></div>
+        <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>
           <Container className="mt-5">
             <h1>Production Records</h1>
