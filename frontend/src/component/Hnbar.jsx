@@ -8,13 +8,14 @@ import { FaSearch } from 'react-icons/fa'; // Import the search icon from react-
 function Hnbar() {
   const navbarStyle = {
     backgroundColor: '#CCCCCC',
-    fontSize: '25px', 
+    fontSize: '35px', 
     color: 'white'
   };
 
   const navLinkStyle = {
     color: 'black',
-    fontSize: '20px' // Adjust the font size as needed
+    fontSize: '20px',
+    fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif'
   };
 
   return (

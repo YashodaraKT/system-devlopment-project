@@ -26,7 +26,20 @@
   margin-top: 20px;
   display: flex;
   flex-direction: column;
+  
 }
+
+.text-danger {
+  color: red;
+}
+
+.logsignup-input small {
+  display: block;
+  margin-top: 5px;
+}
+
+
+
 
 .logsignup-input label {
   font-size: 1.2em; 

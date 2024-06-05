@@ -12,6 +12,7 @@ function Transport() {
   const [appointments, setAppointments] = useState([]);
   const [supplierId, setSupplierId] = useState(null);
   const [successMessage, setSuccessMessage] = useState(''); // State for success message
+  const [errors, setErrors] = useState({}); // State for validation errors
 
   const fetchSupplierId = async () => {
     try {
@@ -53,6 +54,7 @@ function Transport() {
 
   const handlePermanentChange = (event) => {
     setIsPermanent(event.target.value === 'yes');
+    setErrors({});
   };
 
   const handleSizeChange = (event) => {
@@ -63,8 +65,35 @@ function Transport() {
     setStartDate(event.target.value);
   };
 
+  const validate = () => {
+    const newErrors = {};
+    if (!isPermanent) {
+      if (!size) {
+        newErrors.size = 'Size is required';
+      } else if (parseFloat(size) <= 20) {
+        newErrors.size = 'Size must be greater than 20kg';
+      }
+      if (!startDate) {
+        newErrors.startDate = 'Date is required';
+      } else {
+        const selectedDate = moment(startDate);
+        const today = moment().startOf('day');
+        const maxDate = moment().add(7, 'days').startOf('day');
+        if (!selectedDate.isAfter(today) || selectedDate.isAfter(maxDate)) {
+          newErrors.startDate = 'Date must be within the next 7 days and cannot be today';
+        }
+      }
+    }
+    return newErrors;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
     try {
       const response = await axios.post('http://localhost:8081/transport/request', {
         supplierId,
@@ -80,6 +109,7 @@ function Transport() {
       setIsPermanent(false);
       setSize('');
       setStartDate('');
+      setErrors({});
     } catch (error) {
       console.error('Error submitting transport request:', error);
     }
@@ -100,7 +130,7 @@ function Transport() {
 
       <br />
       <br />
-      <div style={{ margin: 'auto', border: '2px solid black', padding: '20px', width: 'fit-content',fontSize:'20px' }}>
+      <div style={{ margin: 'auto', border: '2px solid black', padding: '20px', width: 'fit-content', fontSize: '20px' }}>
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3" controlId="formBasicPermanent">
             <Form.Label>Are you requesting transport permanently?</Form.Label>
@@ -125,12 +155,36 @@ function Transport() {
           {!isPermanent && (
             <>
               <Form.Group className="mb-3" controlId="formBasicNumDays">
-                <Form.Label>Approximate size of the Supply (kg)</Form.Label>
-                <Form.Control type="number" placeholder="Enter the size" value={size} onChange={handleSizeChange} />
+                <Form.Label>Approximate size of the Supply (kg) <span style={{ color: 'red' }}>*</span></Form.Label>
+                <Form.Control 
+                  type="number" 
+                  placeholder="Enter the size" 
+                  value={size} 
+                  onChange={handleSizeChange}
+                  isInvalid={!!errors.size}
+                  min="21"
+                  style={{ 
+                    appearance: 'textfield',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'textfield'
+                  }}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.size}
+                </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3" controlId="formBasicStartDate">
-                <Form.Label>Relevant Date</Form.Label>
-                <Form.Control type="date" placeholder="Select the date" value={startDate} onChange={handleStartDateChange} />
+                <Form.Label>Relevant Date <span style={{ color: 'red' }}>*</span></Form.Label>
+                <Form.Control 
+                  type="date" 
+                  placeholder="Select the date" 
+                  value={startDate} 
+                  onChange={handleStartDateChange}
+                  isInvalid={!!errors.startDate}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.startDate}
+                </Form.Control.Feedback>
               </Form.Group>
             </>
           )}
