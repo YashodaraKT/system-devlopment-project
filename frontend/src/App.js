@@ -5,6 +5,8 @@ import Login from './page/Login';
 import SupplierHome from './page/Supplier/SupplierHome';
 import Transport from './page/Supplier/Transport';
 import Spayment from './page/Supplier/Spayment';
+import Onedayt from './page/Supplier/Onedayt';
+import AcAppointment from './page/Employee/AcAppointment';
 import CusHome from './page/Customer/CusHome';
 import OCalendar from './page/Customer/OCalendar';
 import EmployeeHome from './page/Employee/EmployeeHome'; 
@@ -29,6 +31,7 @@ import EmpViewAppoi from './page/Employee/EmpViewAppoi';
 import EmpProduction from './page/Employee/EmpProduction';
 import EmpRawMaterial from './page/Employee/EmpRawMaterial';
 import EmpSupPay from './page/Employee/EmpSupPay';
+import PendingApp from './page/Employee/PendingApp';
 
 function App() {
   return (
@@ -63,6 +66,9 @@ function App() {
 <Route path='/empproduction' element={<EmpProduction/>}></Route>
 <Route path='/emprawmaterial' element={<EmpRawMaterial/>}></Route>
 <Route path='/empsuppay' element={<EmpSupPay/>}></Route>
+<Route path='/onedayt' element={<Onedayt/>}></Route>
+<Route path='/acappointment' element={<AcAppointment/>}></Route>
+<Route path='/pendingapp' element={<PendingApp/>}></Route>
 </Routes>
 
 

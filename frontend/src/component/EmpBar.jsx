@@ -77,6 +77,7 @@ function BasicExample() {
                   </>
                 )}
                 <Nav.Link href="/empsuppay" style={linkStyle}>Supplies</Nav.Link>
+                <Nav.Link href="/acappointment" style={linkStyle}>Appo</Nav.Link>
               </div>
             </Nav>
           </Navbar.Collapse>

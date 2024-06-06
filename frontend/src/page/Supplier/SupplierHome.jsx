@@ -1,7 +1,7 @@
 import React from 'react';
 import {Button, Container,Card,Row,Col} from 'react-bootstrap';
 import h1Image from '../../assets/h1.png'; 
-import ProfilenavBar from '../../component/ProfilenavBar';
+import SupplierNBar from '../../component/SupplierNBar';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../../component/Footer';
 
@@ -11,7 +11,7 @@ function SupplierHome() {
   const Navigate= useNavigate();
   return (
     <>
-       <div><ProfilenavBar userType="supplier"/></div>
+       <div><SupplierNBar userType="supplier"/></div>
 
 <br></br>
 <br></br>

@@ -6,6 +6,7 @@ import moment from 'moment';
 
 function Transport() {
   const [showScheduledAppointments, setShowScheduledAppointments] = useState(false);
+  const [size, setSize] = useState('');
   const [startDate, setStartDate] = useState('');
   const [description, setDescription] = useState('');
   const [appointments, setAppointments] = useState([]);
@@ -78,7 +79,9 @@ function Transport() {
     }
   }, [locationId]);
 
-
+  const handleSizeChange = (event) => {
+    setSize(event.target.value);
+  };
 
   const handleStartDateChange = (event) => {
     setStartDate(event.target.value);
@@ -94,7 +97,11 @@ function Transport() {
 
   const validate = () => {
     const newErrors = {};
-   
+    if (!size) {
+      newErrors.size = 'Size is required';
+    } else if (parseFloat(size) <= 20) {
+      newErrors.size = 'Size must be greater than 20kg';
+    }
     if (!startDate) {
       newErrors.startDate = 'Date is required';
     } else {
@@ -119,8 +126,9 @@ function Transport() {
       return;
     }
     try {
-      const response = await axios.post('http://localhost:8081/transport/req', {
+      const response = await axios.post('http://localhost:8081/transport/request', {
         supplierId,
+        size,
         date: startDate,
         description,
         agreement
@@ -129,6 +137,7 @@ function Transport() {
       fetchSupplierAppointments();
       setSuccessMessage('Transport request submitted successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
+      setSize('');
       setStartDate('');
       setDescription('');
       setAgreement(false);
@@ -165,8 +174,27 @@ function Transport() {
             <Form.Control type="text" value={locationName} readOnly />
           </Form.Group>
 
+          <Form.Group className="mb-3" controlId="formBasicNumDays">
+            <Form.Label>Approximate size of the Supply (kg) <span style={{ color: 'red' }}>*</span></Form.Label>
+            <Form.Control 
+              type="number" 
+              placeholder="Enter the size" 
+              value={size} 
+              onChange={handleSizeChange}
+              isInvalid={!!errors.size}
+              min="21"
+              style={{ 
+                appearance: 'textfield',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none'
+              }}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.size}
+            </Form.Control.Feedback>
+          </Form.Group>
           <Form.Group className="mb-3" controlId="formBasicStartDate">
-            <Form.Label>From Beginning <span style={{ color: 'red' }}>*</span></Form.Label>
+            <Form.Label>Relevant Date <span style={{ color: 'red' }}>*</span></Form.Label>
             <Form.Control 
               type="date" 
               placeholder="Select the date" 

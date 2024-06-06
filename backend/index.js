@@ -17,7 +17,14 @@ user:"root",
 password:"",
 database:"omega"
 })
+//************************************************************* */
 
+
+
+
+
+
+/******************************************* */
 app.post('/login', (req, res) => {
   const sql = "SELECT * FROM user WHERE User_Name = ? AND Password = ?";
 
@@ -291,15 +298,14 @@ app.post('/appointment', (req, res) => {
   });
 });
 
-//View Appointment
+//View Appointment(requested)
 app.get('/view_appointment', (req, res) => {
   let sql = `
     SELECT 
       appointment.Appointment_ID, 
-      appointment.Supplier_ID, 
       appointment.Date, 
-      appointment.Status, 
       supplier.Name,
+      supplier.Contact_Number, 
       supplier.Address1,
       supplier.Address2,
       location.Location_Name
@@ -313,6 +319,8 @@ app.get('/view_appointment', (req, res) => {
       location
     ON
       supplier.Location_Id = location.Location_Id
+    WHERE
+      appointment.Approval = 'Requested'
   `;
   db.query(sql, (err, result) => {
     if (err) throw err;
@@ -320,16 +328,131 @@ app.get('/view_appointment', (req, res) => {
   });
 });
 
+
 //Approved appointment
 
 app.post('/update_appointment', (req, res) => {
-  const { appointmentId, approval } = req.body;
+  const { appointmentId, approval, selectedTime, userId } = req.body;
+  
+  // Update the appointment approval
   let sql = `UPDATE appointment SET Approval = ? WHERE Appointment_ID = ?`;
   db.query(sql, [approval, appointmentId], (err, result) => {
-    if (err) throw err;
-    res.send({ message: 'Appointment updated successfully' });
+    if (err) {
+      console.log(err);
+      res.status(500).send({ error: 'An error occurred while updating appointment approval' });
+      return;
+    }
+    
+    // If the appointment is approved, update selected time and user ID
+    if (approval === 'Accepted') {
+      let updateSql = `UPDATE appointment SET Selected_Time = ?, R_User_ID = ? WHERE Appointment_ID = ?`;
+      db.query(updateSql, [selectedTime, userId, appointmentId], (updateErr, updateResult) => {
+        if (updateErr) {
+          console.log(updateErr);
+          res.status(500).send({ error: 'An error occurred while updating selected time and user ID' });
+          return;
+        }
+        
+        res.send({ message: 'Appointment updated successfully' });
+      });
+    } else {
+      res.send({ message: 'Appointment updated successfully' });
+    }
   });
 });
+//View Appointment-employee(pending)
+app.get('/view_penappointment', (req, res) => {
+  let sql = `
+    SELECT 
+      appointment.Appointment_ID, 
+      appointment.Date, 
+       appointment.Selected_Time, 
+      supplier.Name,
+      supplier.Contact_Number, 
+      supplier.Address1,
+      supplier.Address2,
+      location.Location_Name
+    FROM 
+      appointment 
+    JOIN 
+      supplier 
+    ON 
+      appointment.Supplier_ID = supplier.Supplier_ID
+    JOIN
+      location
+    ON
+      supplier.Location_Id = location.Location_Id
+    WHERE
+      appointment.Approval = 'Accepted'
+  `;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
+//View Appointment-employee(complete)
+app.get('/view_comappointment', (req, res) => {
+  let sql = `
+    SELECT 
+      appointment.Appointment_ID, 
+      appointment.Date, 
+       appointment.Selected_Time, 
+      supplier.Name,
+      supplier.Contact_Number, 
+      supplier.Address1,
+      supplier.Address2,
+      location.Location_Name
+    FROM 
+      appointment 
+    JOIN 
+      supplier 
+    ON 
+      appointment.Supplier_ID = supplier.Supplier_ID
+    JOIN
+      location
+    ON
+      supplier.Location_Id = location.Location_Id
+    WHERE
+      appointment.Approval = 'Completed'
+  `;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
+//View Appointment-employee(rejected)
+app.get('/view_rejappointment', (req, res) => {
+  let sql = `
+    SELECT 
+      appointment.Appointment_ID, 
+      appointment.Date, 
+       appointment.Selected_Time, 
+      supplier.Name,
+      supplier.Contact_Number, 
+      supplier.Address1,
+      supplier.Address2,
+      location.Location_Name
+    FROM 
+      appointment 
+    JOIN 
+      supplier 
+    ON 
+      appointment.Supplier_ID = supplier.Supplier_ID
+    JOIN
+      location
+    ON
+      supplier.Location_Id = location.Location_Id
+    WHERE
+      appointment.Approval = 'Rejected'
+  `;
+  db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
 
 
 //-----------------------View Approved Orders-----
@@ -731,22 +854,50 @@ app.post('/add_supply', (req, res) => {
 
 
 //-----------------------------
-
+//oneday
 app.post('/transport/request', (req, res) => {
-  const { supplierId, isPermanent, size, date } = req.body;
-  let status = isPermanent ? 1 : 0;
+  const { supplierId, size, date, description, agreement } = req.body;
 
-  const query = `INSERT INTO appointment (Supplier_ID, Date, Size, Status) VALUES (?, ?, ?, ?)
-                 ON DUPLICATE KEY UPDATE Date=VALUES(Date), Size=VALUES(Size), Status=VALUES(Status)`;
+  if (!agreement) {
+    return res.status(400).send('You must agree to our price ranges.');
+  }
 
-  db.query(query, [supplierId, isPermanent ? null : date, isPermanent ? null : size, status], (err, result) => {
-      if (err) {
-          console.error('Error executing query:', err);
-          return res.status(500).send('Server error');
-      }
-      res.status(200).send('Transport request submitted successfully');
+  const query = `INSERT INTO appointment (Supplier_ID, Date, Size, Description) 
+                 VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE 
+                 Date=VALUES(Date), Size=VALUES(Size), Description=VALUES(Description)`;
+
+  db.query(query, [supplierId, date, size, description], (err, result) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      return res.status(500).send('Server error');
+    }
+    res.status(200).send('Transport request submitted successfully');
   });
 });
+//permanant
+app.post('/transport/req', (req, res) => {
+  const { supplierId,  date, description, agreement } = req.body;
+
+  if (!agreement) {
+    return res.status(400).send('You must agree to our price ranges.');
+  }
+
+  const query = `INSERT INTO p_appointment (Supplier_ID, Begin_Date, Reason) 
+                 VALUES (?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+Begin_Date=VALUES(Begin_Date), Reason=VALUES(Reason)
+`;
+
+  db.query(query, [supplierId, date, description], (err, result) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      return res.status(500).send('Server error');
+    }
+    res.status(200).send('Transport request submitted successfully');
+  });
+});
+
 
 //-------View Production
 
@@ -1033,6 +1184,25 @@ app.post('/addProduct', (req, res) => {
       const newProduct = { Product_ID: productId, Product_Name, Cost, Selling_Price, In_Stock: 0 }; // Assuming In_Stock starts at 0
       res.status(201).send(newProduct);
     }
+  });
+});
+//*************************Supplier Part */
+//**********Show location and adress */
+app.get('/transport_supplier/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const sql = "SELECT Supplier_ID, Address1, Address2, Location_Id FROM supplier WHERE User_ID = ?";
+  
+  db.query(sql, [userId], (err, data) => {
+    if (err) return res.status(500).json({ error: "Internal Server Error" });
+    if (data.length === 0) return res.status(404).json({ error: "Supplier not found" });
+    return res.json({
+      supplierId: data[0].Supplier_ID,
+      address: {
+        address1: data[0].Address1,
+        address2: data[0].Address2,
+      },
+      locationId: data[0].Location_Id
+    });
   });
 });
 

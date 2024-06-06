@@ -8,12 +8,16 @@ function AdminHome() {
 
     return (
       <div>
-        <div><ProfilenavBar userType="admin" /></div>
+        <div><ProfilenavBar userType="admin" />
+        
+        </div>
+        <div>
+      
         <div style={{ display: 'flex' }}>
           <div><EmpBar /></div>
           <div style={{ marginLeft: '20px', flexGrow: 1 }}>
         <div style={{ width: '400px', height: '400px', margin: '0 auto' }}>
-       
+        </div>
         </div>
       </div>
       </div>
