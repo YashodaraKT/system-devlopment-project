@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { Button, Container, Grid, TextField, Card, CardContent } from '@mui/material';
 import axios from 'axios';
-import '../css/ChangePW.css'; 
+import '../css/ChangePW.css';
 import Footer from '../component/Footer';
 
 const ChangePW = () => {
@@ -19,79 +19,81 @@ const ChangePW = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     try {
-      const response = await axios.post(
-        'http://localhost:8081/change-password',
-        {
-          username,
-          currentPassword,
-          newPassword,
-        }
-      );
-
+      const response = await axios.post('http://localhost:8081/change-password', {
+        username,
+        currentPassword,
+        newPassword,
+      });
+  
       setStatus(response.data.status);
-
+  
       if (response.data.status === 'Password changed successfully') {
-        resetForm();
+        resetForm(); // Clear input fields
       }
     } catch (error) {
       console.error(error);
       setStatus('Error changing password');
     }
   };
-
+  
   return (
     <div>
       <Container className="mt-5">
-        <Row className="justify-content-center align-items-center">
-          <Col md={6} className="text-center">
+        <Grid container justifyContent="center" alignItems="center">
+          <Grid item md={6} className="text-center">
             <img src={require('../assets/cpw.jpg')} alt="Background" className="img-fluid" />
-          </Col>
-          <Col md={6}>
+          </Grid>
+          <Grid item md={6}>
             <div className="custom-form-container">
-              <h2 className="mb-4">Change Password</h2>
-              <Form onSubmit={handleSubmit}>
-                <Form.Group controlId="username">
-                  <Form.Label>Username:</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </Form.Group>
-
-                <Form.Group controlId="currentPassword">
-                  <Form.Label>Current Password:</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                  />
-                </Form.Group>
-
-                <Form.Group controlId="newPassword">
-                  <Form.Label>New Password:</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                </Form.Group>
-                <br/>
-                
-                <Button variant="primary" type="submit" className="w-100">
-                  Change Password
-                </Button>
-              </Form>
-
-              {status && <p className="mt-3">{status}</p>}
+              <Card sx={{ width: '100%' }}>
+                <CardContent className="card-content">
+                  <h2 className="mb-4">Change Password</h2>
+                  <form onSubmit={handleSubmit}>
+                    <TextField
+                      id="username"
+                      label="Username"
+                      variant="outlined"
+                      fullWidth
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      id="currentPassword"
+                      label="Current Password"
+                      type="password"
+                      variant="outlined"
+                      fullWidth
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      id="newPassword"
+                      label="New Password"
+                      type="password"
+                      variant="outlined"
+                      fullWidth
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                    <Button variant="contained" type="submit" fullWidth>
+                      Change Password
+                    </Button>
+                  </form>
+                  {status && <p className="mt-3">{status}</p>}
+                </CardContent>
+              </Card>
             </div>
-          </Col>
-        </Row>
+          </Grid>
+        </Grid>
       </Container>
 
-      <br/><br/>
+      <br />
+      <br />
       <div><Footer /></div>
     </div>
   );

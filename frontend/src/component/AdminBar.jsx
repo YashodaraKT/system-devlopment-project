@@ -95,6 +95,7 @@ function BasicExample() {
                   </>
                 )}
                 <Nav.Link href="/suppayment" style={linkStyle}>Supplies</Nav.Link>
+                <Nav.Link href="/ftest" style={linkStyle}>Test</Nav.Link>
                 <Nav.Link style={linkStyle} onClick={toggleChange} className="nav-dropdown-link">
                   Change <span className={`arrow ${showChange ? 'up' : 'down'}`}></span>
                 </Nav.Link>
@@ -103,6 +104,7 @@ function BasicExample() {
                     <Nav.Link href="/product" style={dropdownItemStyle}>Product</Nav.Link>
                     <Nav.Link href="/material" style={dropdownItemStyle}>Raw Material</Nav.Link>
                   </>
+                  
                 )}
               </div>
             </Nav>

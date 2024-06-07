@@ -32,6 +32,8 @@ import EmpProduction from './page/Employee/EmpProduction';
 import EmpRawMaterial from './page/Employee/EmpRawMaterial';
 import EmpSupPay from './page/Employee/EmpSupPay';
 import PendingApp from './page/Employee/PendingApp';
+import FTest from './page/Employee/FTest';
+import AddSupplier from './page/Admin/AddSupplier';
 
 function App() {
   return (
@@ -69,6 +71,8 @@ function App() {
 <Route path='/onedayt' element={<Onedayt/>}></Route>
 <Route path='/acappointment' element={<AcAppointment/>}></Route>
 <Route path='/pendingapp' element={<PendingApp/>}></Route>
+<Route path='/ftest' element={<FTest/>}></Route>
+<Route path='/newsupplier' element={<AddSupplier/>}></Route>
 </Routes>
 
 

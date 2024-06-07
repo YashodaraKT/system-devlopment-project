@@ -1,6 +1,5 @@
 .custom-form-container {
-  border: 2px solid #000000; /* Dark black border with 2px thickness */
-  border-radius: 8px;
+    border-radius: 8px;
   padding: 20px;
   background-color: #ffffff; /* White background */
   width: 400px;
