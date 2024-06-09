@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
@@ -8,9 +8,41 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
     Supplier_Name: '',
     Contact_Number: '',
     Quantity: '',
-    Payment: ''
+    Payment: '',
+    Location_Id: '',
+    Transport: ''
   });
-  const [transport, setTransport] = useState(0);
+  const [locations, setLocations] = useState([]);
+  const [unitPrice, setUnitPrice] = useState(0);
+
+  useEffect(() => {
+    axios.get('http://localhost:8081/location')
+      .then(response => {
+        setLocations(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching locations:', error);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (newSupply.Location_Id && newSupply.Transport) {
+      const transportColumn = newSupply.Transport === '1' ? 'Price' : 'Price_WT';
+      axios.get(`http://localhost:8081/location_price`, {
+        params: {
+          Location_Id: newSupply.Location_Id,
+          Column: transportColumn
+        }
+      })
+      .then(response => {
+        setUnitPrice(response.data.unitPrice);
+        setNewSupply(s => ({ ...s, Payment: response.data.unitPrice * s.Quantity }));
+      })
+      .catch(error => {
+        console.error('Error fetching unit price:', error);
+      });
+    }
+  }, [newSupply.Location_Id, newSupply.Transport, newSupply.Quantity]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -34,20 +66,17 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
 
       if (supplierResponse.data.supplier) {
         const supplierId = supplierResponse.data.supplier.Supplier_ID;
-        const transportStatus = supplierResponse.data.supplier.Transport;
-        console.log("Transport value before setTransport:", transportStatus);
-        setTransport(transportStatus);
-        console.log("Transport value:", transportStatus);
-
+        const transportStatus = newSupply.Transport === '1' ? 'With Transport' : 'Without Transport';
         const date = moment().format('YYYY-MM-DD');
-        const payment = transportStatus === 1 ? priceWithTransport * newSupply.Quantity : priceWithoutTransport * newSupply.Quantity;
-        console.log("Total payment calculated:", payment);
+
         const newSupplyData = {
           Supplier_ID: supplierId,
           Quantity: newSupply.Quantity,
-          Payment: payment,
+          Payment: newSupply.Payment,
           Date: date,
-          R_User_ID: R_User_ID
+          R_User_ID: R_User_ID,
+          Location_Id: newSupply.Location_Id,
+          Transport_Status: transportStatus
         };
 
         const addSupplyResponse = await axios.post('http://localhost:8081/add_supply', newSupplyData);
@@ -99,18 +128,52 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
               required
             />
           </Form.Group>
+          <Form.Group controlId="Location_Id">
+            <Form.Label>Location</Form.Label>
+            <Form.Control
+              as="select"
+              name="Location_Id"
+              value={newSupply.Location_Id}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="" disabled>Select Location</option>
+              {locations.map(location => (
+                <option key={location.Location_Id} value={location.Location_Id}>
+                  {location.Location_Name}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+          <Form.Group controlId="Transport">
+            <Form.Label>Transport</Form.Label>
+            <Form.Control
+              as="select"
+              name="Transport"
+              value={newSupply.Transport}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="" disabled>Select Transport Option</option>
+              <option value="1">With Transport</option>
+              <option value="0">Without Transport</option>
+            </Form.Control>
+          </Form.Group>
           <Form.Group controlId="Payment">
             <Form.Label>Payment (LKR)</Form.Label>
             <Form.Control
               type="number"
               name="Payment"
-              value={newSupply.Quantity ? (transport === 1 ? priceWithTransport * newSupply.Quantity : priceWithoutTransport * newSupply.Quantity) : ''}
+              value={newSupply.Payment}
               readOnly
             />
           </Form.Group>
-          <Button variant="primary" type="submit">
-            Add Supply
-          </Button>
+          <br/>
+          <div className="d-flex justify-content-center">
+            <Button variant="primary" type="submit">
+              Add Supply
+            </Button>
+          </div>
         </Form>
       </Modal.Body>
     </Modal>

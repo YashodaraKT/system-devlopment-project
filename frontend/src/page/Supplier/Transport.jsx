@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProfilenavBar from '../../component/ProfilenavBar';
-import { Button, Form, Table, Offcanvas, Alert } from 'react-bootstrap';
-import moment from 'moment';
+import { Button, TextField, Typography, Alert } from '@mui/material';
 
 function Transport() {
   const [showScheduledAppointments, setShowScheduledAppointments] = useState(false);
@@ -17,6 +16,7 @@ function Transport() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errors, setErrors] = useState({});
   const [agreement, setAgreement] = useState(false);
+  const [transportStatus, setTransportStatus] = useState('');
 
   const handleShowScheduledAppointments = () => setShowScheduledAppointments(true);
   const handleCloseScheduledAppointments = () => setShowScheduledAppointments(false);
@@ -78,8 +78,6 @@ function Transport() {
     }
   }, [locationId]);
 
-
-
   const handleStartDateChange = (event) => {
     setStartDate(event.target.value);
   };
@@ -94,16 +92,9 @@ function Transport() {
 
   const validate = () => {
     const newErrors = {};
-   
+
     if (!startDate) {
       newErrors.startDate = 'Date is required';
-    } else {
-      const selectedDate = moment(startDate);
-      const today = moment().startOf('day');
-      const maxDate = moment().add(7, 'days').startOf('day');
-      if (!selectedDate.isAfter(today) || selectedDate.isAfter(maxDate)) {
-        newErrors.startDate = 'Date must be within the next 7 days and cannot be today';
-      }
     }
     if (!agreement) {
       newErrors.agreement = 'You must agree to our price ranges';
@@ -134,116 +125,96 @@ function Transport() {
       setAgreement(false);
       setErrors({});
     } catch (error) {
-      console.error('Error submitting transport request:', error);
+      if (error.response && error.response.status === 400) {
+        setErrors({ submit: error.response.data });
+      } else {
+        console.error('Error submitting transport request:', error);
+      }
+    }
+  };
+
+  const getStatus = () => {
+    if (transportStatus === '1') {
+      return 'With Transport';
+    } else {
+      return 'Without Transport';
     }
   };
 
   return (
-    <div>
-      <div><ProfilenavBar userType="supplier" /></div>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <div>
+        <div><ProfilenavBar userType="supplier" /></div>
 
-      <div style={{ textAlign: 'center' }}>
-        <h1>Transport</h1>
-      </div>
-      <div style={{ marginLeft: '50px', display: 'inline-block' }}>
-        <Button variant="info" onClick={handleShowScheduledAppointments} style={{ marginLeft: '315px' }}>
-          Appointments
-        </Button>
-      </div>
-
-      <br />
-      <br />
-      <div style={{ margin: 'auto', border: '2px solid black', padding: '20px', width: 'fit-content', fontSize: '20px' }}>
-        <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3" controlId="formBasicAddress">
-            <Form.Label>Address</Form.Label>
-            <Form.Control type="text" value={`${address1}, ${address2}`} readOnly />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="formBasicLocationId">
-            <Form.Label>Location Name</Form.Label>
-            <Form.Control type="text" value={locationName} readOnly />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="formBasicStartDate">
-            <Form.Label>From Beginning <span style={{ color: 'red' }}>*</span></Form.Label>
-            <Form.Control 
-              type="date" 
-              placeholder="Select the date" 
-              value={startDate} 
+        <br />
+        <br />
+        <div style={{ margin: 'auto', border: '2px solid black', padding: '20px', width: '500px', fontSize: '20px' }}>
+          <form onSubmit={handleSubmit}>
+            <TextField style={{ marginBottom: '20px' }}
+              label="Address"
+              value={`${address1}, ${address2}`}
+              fullWidth
+              disabled
+            />
+            <TextField style={{ marginBottom: '20px' }}
+              label="Location Name"
+              value={locationName}
+              fullWidth
+              disabled
+            />
+            <TextField style={{ marginBottom: '20px' }}
+              label="Current Status"
+              value={getStatus()}
+              fullWidth
+              disabled
+            />
+            <TextField style={{ marginBottom: '20px' }}
+              label="Beginning From *"
+              type="date"
+              value={startDate}
               onChange={handleStartDateChange}
-              isInvalid={!!errors.startDate}
+              fullWidth
+              required
+              error={!!errors.startDate}
+              helperText={errors.startDate}
             />
-            <Form.Control.Feedback type="invalid">
-              {errors.startDate}
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicDescription">
-            <Form.Label>Description</Form.Label>
-            <Form.Control 
-              as="textarea" 
-              placeholder="Enter description" 
-              value={description} 
+            <TextField style={{ marginBottom: '20px' }}
+              label="Description"
+              multiline
+              rows={4}
+              value={description}
               onChange={handleDescriptionChange}
+              fullWidth
             />
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicAgreement">
-  <Form.Check 
-    type="checkbox" 
-    label={<span style={{ fontSize: '0.8em' }}>I agree with the price ranges</span>} 
-    checked={agreement}
-    onChange={handleAgreementChange}
-    isInvalid={!!errors.agreement}
-  />
-  <Form.Control.Feedback type="invalid">
-    {errors.agreement}
-  </Form.Control.Feedback>
-</Form.Group>
-          <Button variant="success" type="submit">
-            Submit
-          </Button>
-        </Form>
+            <div style={{ marginBottom: '20px' }}>
+              <input style={{ marginRight: '10px' }}
+                type="checkbox"
+                checked={agreement}
+                onChange={handleAgreementChange}
+              />
+              <Typography style={{ display: 'inline' }}>I agree with the price ranges</Typography>
+            </div>
+            {errors.agreement && <Alert severity="error">{errors.agreement}</Alert>}
+            <Button variant="contained" type="submit">
+              Submit
+            </Button>
+          </form>
 
-        {successMessage && <Alert variant="success" style={{ marginTop: '20px' }}>{successMessage}</Alert>}
+          {successMessage && <Alert severity="success" style={{ marginTop: '20px' }}>{successMessage}</Alert>}
+          {errors.submit && <Alert severity="error" style={{ marginTop: '20px' }}>{errors.submit}</Alert>}
 
-        <div style={{ marginTop: '20px' }}>
-          <ul>
-            <li>After confirming the transport, our drivers will contact you.</li>
-            <li>Please ensure your supplies are prepared on time.</li>
-            <li>Your payment will be reduced due to the transport costs.</li>
-          </ul>
-        </div>
-      </div>
+          <div style={{ marginTop: '20px' }}>
+            <ul>
+              <li>After confirming the transport, our drivers will contact you.</li>
+              <li>Please ensure your supplies are prepared on time.</li>
+              <li>Your payment will be reduced due to the transport costs.</li>
+</ul>
+</div>
+</div>
 
-      <Offcanvas show={showScheduledAppointments} onHide={handleCloseScheduledAppointments}>
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Scheduled Appointments</Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>Appointment ID</th>
-                <th>Date</th>
-                <th>Size</th>
-                <th>Approval</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((appointment) => (
-                <tr key={appointment.Appointment_ID}>
-                  <td>{appointment.Appointment_ID}</td>
-                  <td>{moment(appointment.Date).format('MM/DD/YYYY')}</td>
-                  <td>{appointment.Size}</td>
-                  <td>{appointment.Approval === 1 ? 'Approved' : appointment.Approval === 10 ? 'Pending' : appointment.Approval === 0 ? 'Declined' : ''}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Offcanvas.Body>
-      </Offcanvas>
-    </div>
-  );
+  </div>
+</div>
+);
 }
 
 export default Transport;

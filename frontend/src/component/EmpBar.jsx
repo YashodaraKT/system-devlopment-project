@@ -9,6 +9,7 @@ function BasicExample() {
   const [showOrders, setShowOrders] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showChange, setShowChange] = useState(false);
+  const [showAppointments, setShowAppointments] = useState(false);
 
   const toggleRegister = () => {
     setShowRegister(!showRegister);
@@ -24,6 +25,9 @@ function BasicExample() {
 
   const toggleChange = () => {
     setShowChange(!showChange);
+  };
+  const toggleAppointments = () => {
+    setShowAppointments(!showAppointments);
   };
 
   const linkStyle = { margin: '20px 0', marginLeft: '30px', color: 'white', fontSize: '18px' };
@@ -66,7 +70,6 @@ function BasicExample() {
               <div>
                 <Nav.Link href="/" style={linkStyle}>Home</Nav.Link>
                 <Nav.Link href="/empviewsupplier" style={linkStyle}>Register Supplier</Nav.Link>
-                <Nav.Link href="/empviewappoi" style={linkStyle}>Appointment</Nav.Link>
                 <Nav.Link style={linkStyle} onClick={toggleInventory} className="nav-dropdown-link">
                   Inventory <span className={`arrow ${showInventory ? 'up' : 'down'}`}></span>
                 </Nav.Link>
@@ -77,7 +80,21 @@ function BasicExample() {
                   </>
                 )}
                 <Nav.Link href="/empsuppay" style={linkStyle}>Supplies</Nav.Link>
-                <Nav.Link href="/acappointment" style={linkStyle}>Appo</Nav.Link>
+            
+
+                <Nav.Link style={linkStyle} onClick={toggleAppointments} className="nav-dropdown-link">
+                Appointments<span className={`arrow ${showAppointments ? 'up' : 'down'}`}></span>
+                </Nav.Link>
+                {showAppointments && (
+                  <>
+                    <Nav.Link href="/acappointment" style={dropdownItemStyle}>Oneday Change</Nav.Link>
+                    <Nav.Link href="/emprawmaterial" style={dropdownItemStyle}>Permenant Change</Nav.Link>
+                  </>
+                )}
+
+
+
+                
               </div>
             </Nav>
           </Navbar.Collapse>

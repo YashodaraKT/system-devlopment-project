@@ -124,14 +124,18 @@ function ViewSupplierPayments() {
 
   return (
     <div>
-      <div><ProfileBar userType="employee" /></div>
+      <div><ProfileBar pageName={"Fish Collection"} /></div>
   <div style={{ display: 'flex' }}>
     <div><EmpBar /></div>
     <div style={{ marginLeft: '20px', flexGrow: 1 }}>
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <h1 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Supplier Payments</h1>
-          <Form.Group style={{ marginBottom: 0, marginLeft: 'auto' }}>
+         
+            <Button variant="primary" onClick={handleShowNewSupply}>
+              Add New Supply
+            </Button>
+            <br/>
+            <br/>
+            <Form.Group style={{ marginBottom: 0, marginLeft: 'auto' }}>
             <Form.Control
               type="text"
               placeholder="Search"
@@ -139,14 +143,8 @@ function ViewSupplierPayments() {
               onChange={handleSearchQueryChange}
             />
           </Form.Group>
-            <Button variant="secondary" onClick={handleShowNewPopup} style={{ marginRight: '10px' }}>
-              Show Popup
-            </Button>
-            <Button variant="primary" onClick={handleShowNewSupply}>
-              Add New Supply
-            </Button>
           </div>
-          <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
+          <div style={{ marginLeft: '50px',marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
             <Table striped bordered hover>
               <thead>
                 <tr>

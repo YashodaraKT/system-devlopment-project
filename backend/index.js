@@ -842,19 +842,41 @@ app.get('/find_supplier', (req, res) => {
 
 
 app.post('/add_supply', (req, res) => {
-  const { Supplier_ID, Quantity, Payment, Date, R_User_ID } = req.body;
-  const query = `
-    INSERT INTO supply (Supplier_ID, Quantity, Payment, Date, Payment_Status, R_User_ID)
-    VALUES (?, ?, ?, ?, 0, ?)
-  `;
-  db.query(query, [Supplier_ID, Quantity, Payment, Date, R_User_ID], (err, result) => {
+  const { Supplier_ID, Quantity, Date, R_User_ID, Location_Id, Transport_Status } = req.body;
+  const transportColumn = Transport_Status === 'With Transport' ? 'Price' : 'Price_WT';
+
+  const getPriceQuery = `SELECT ${transportColumn} AS Unit_Price FROM location WHERE Location_Id = ?`;
+
+  db.query(getPriceQuery, [Location_Id], (err, result) => {
     if (err) {
       res.status(500).send({ message: err.message });
-    } else {
-      res.send({ message: 'Supply added successfully.' });
+      return;
     }
+
+    if (result.length === 0) {
+      res.status(404).send({ message: 'Location not found' });
+      return;
+    }
+
+    const unitPrice = result[0].Unit_Price;
+    const Payment = unitPrice * Quantity;
+
+    const addSupplyQuery = `
+      INSERT INTO supply (Supplier_ID, Quantity, Payment, Date, Payment_Status, R_User_ID, Location_Id, Transport_Status)
+      VALUES (?, ?, ?, ?, 0, ?, ?, ?)
+    `;
+
+    db.query(addSupplyQuery, [Supplier_ID, Quantity, Payment, Date, R_User_ID, Location_Id, Transport_Status], (err, result) => {
+      if (err) {
+        res.status(500).send({ message: err.message });
+      } else {
+        res.send({ message: 'Supply added successfully.' });
+      }
+    });
   });
 });
+
+
 
 
 //-----------------------------
@@ -881,26 +903,48 @@ app.post('/transport/request', (req, res) => {
 });
 //permanant
 app.post('/transport/req', (req, res) => {
-  const { supplierId,  date, description, agreement } = req.body;
+  const { supplierId, date, description, agreement } = req.body;
 
   if (!agreement) {
     return res.status(400).send('You must agree to our price ranges.');
   }
 
-  const query = `INSERT INTO p_appointment (Supplier_ID, Begin_Date, Reason) 
-                 VALUES (?, ?, ?)
-                 ON DUPLICATE KEY UPDATE
-Begin_Date=VALUES(Begin_Date), Reason=VALUES(Reason)
-`;
+  // Check if there's an approved appointment within 30 days
+  const checkQuery = `
+    SELECT * FROM p_appointment 
+    WHERE Supplier_ID = ? 
+      AND Approval = 1 
+      AND ABS(DATEDIFF(Begin_Date, ?)) < 30
+  `;
 
-  db.query(query, [supplierId, date, description], (err, result) => {
+  db.query(checkQuery, [supplierId, date], (err, results) => {
     if (err) {
-      console.error('Error executing query:', err);
+      console.error('Error checking existing appointments:', err);
       return res.status(500).send('Server error');
     }
-    res.status(200).send('Transport request submitted successfully');
+
+    if (results.length > 0) {
+      return res.status(400).send('You cannot place a new appointment within 30 days of an existing approved appointment.');
+    }
+
+    // Insert new appointment
+    const insertQuery = `
+      INSERT INTO p_appointment (Supplier_ID, Begin_Date, Reason) 
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE Begin_Date=VALUES(Begin_Date), Reason=VALUES(Reason)
+    `;
+
+    db.query(insertQuery, [supplierId, date, description], (err, result) => {
+      if (err) {
+        console.error('Error executing query:', err);
+        return res.status(500).send('Server error');
+      }
+      res.status(200).send('Transport request submitted successfully');
+    });
   });
 });
+
+
 
 
 //-------View Production
