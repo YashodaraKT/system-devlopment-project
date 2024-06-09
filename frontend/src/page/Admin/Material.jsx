@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Form, Button } from 'react-bootstrap';
 import AdminBar from '../../component/AdminBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function Material() {
   const [rawMaterials, setRawMaterials] = useState([]);
@@ -44,7 +44,7 @@ function Material() {
 
   return (
     <div>
-     <div><ProfilenavBar userType="admin" /></div>
+     <div><ProfileBar pageName="Raw Material"  /></div>
       <div style={{ display: 'flex' }}>
         <div><AdminBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>

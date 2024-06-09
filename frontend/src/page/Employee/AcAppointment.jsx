@@ -3,9 +3,8 @@ import axios from 'axios';
 import moment from 'moment';
 import PendingAppE from '../../component/PendingAppE';
 import CompleteAppE from '../../component/CompleteAppE';
-import RejectedE from '../../component/RejectedE';
 import EmpBar from '../../component/EmpBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -20,7 +19,7 @@ import Box from '@mui/material/Box';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Accepted = 'Accepted';
-const Rejected = 'Rejected';
+const Rejected = 'Rejected1';
 
 const ColorTabs = ({ value, onChange }) => {
   return (
@@ -35,7 +34,6 @@ const ColorTabs = ({ value, onChange }) => {
         <Tab value="appointments" label=" Requested Transports" />
         <Tab value="pendingapp" label="Pending Transports" />
         <Tab value="completeAppE" label="Completed Transports" />
-        <Tab value="rejectedE" label="Rejected Transports" />
         {/* Add more tabs as needed */}
       </Tabs>
     </Box>
@@ -98,7 +96,7 @@ function ViewAppointment() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="employee" /></div>
+      <div><ProfileBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
         <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>
@@ -178,17 +176,6 @@ function ViewAppointment() {
           {tabValue === 'completeAppE' && (
             <div>
               <CompleteAppE />
-            </div>
-          )}
-          {tabValue === 'rejectedE' && (
-            <div>
-              <RejectedE />
-            </div>
-          )}
-          {tabValue === 'other' && (
-            <div>
-              {/* Render other content here */}
-              <p>Other content goes here...</p>
             </div>
           )}
         </div>

@@ -3,7 +3,7 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import moment from 'moment';
 import EmpBar from '../../component/EmpBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 const Accepted = 'Accepted';
 const Rejected = 'Rejected';
@@ -59,7 +59,7 @@ function ViewAppointment() {
 
   return (
     <div>
-     <div><ProfilenavBar userType="employee" /></div>
+     <div><ProfileBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
         <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}></div>

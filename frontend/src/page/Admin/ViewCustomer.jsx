@@ -4,7 +4,7 @@ import { Table, Container, Button } from 'react-bootstrap';
 import CustomerRegistration from '../../component/CustomerRegistration';
 import UpdateCustomer from '../../component/UpdateCustomer'; 
 import AdminBar from '../../component/AdminBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function ViewCustomer() {
   const [modalShow, setModalShow] = useState(false);
@@ -28,7 +28,7 @@ function ViewCustomer() {
 
   return (
     <div>
-     <div><ProfilenavBar userType="admin" /></div>
+     <div><ProfileBar pageName="Customer" /></div>
       <div style={{ display: 'flex' }}>
         <div><AdminBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>

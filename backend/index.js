@@ -5,9 +5,23 @@ import cors from 'cors';
 import mysql from 'mysql';
 import moment from 'moment';
 
+import multer from 'multer';
+import path from 'path';
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './uploads'); // Destination folder for storing images
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // File name with current timestamp
+  }
+});
+
+const upload = multer({ storage: storage });
+
 
 const app= express();
-
+app.use(express.static("public"))
+app.use("/uploads",express.static("uploads"))
 app.use(cors());
 app.use(express.json());
 
@@ -17,9 +31,10 @@ user:"root",
 password:"",
 database:"omega"
 })
+
 //************************************************************* */
 
-
+ 
 
 
 
@@ -95,7 +110,7 @@ app.get('/supply/:supplierId', (req, res) => {
   });
 });
 //-----------------------Appointments
-app.get('/appointment/:supplierId', (req, res) => {
+/*app.get('/appointment/:supplierId', (req, res) => {
   const supplierId = req.params.supplierId;
   const sql = "SELECT * FROM appointment WHERE Supplier_ID = ?";
   
@@ -104,7 +119,7 @@ app.get('/appointment/:supplierId', (req, res) => {
     return res.json({ appointments: data });
   });
 });
-
+*/
 //************locations 
 
 app.get('/location', (req, res) => {
@@ -390,19 +405,19 @@ app.get('/view_penappointment', (req, res) => {
     res.send(result);
   });
 });
-
-//View Appointment-employee(complete)
-app.get('/view_comappointment', (req, res) => {
+//*************************************** */
+app.get('/view_final_app_E', (req, res) => {
   let sql = `
     SELECT 
       appointment.Appointment_ID, 
       appointment.Date, 
-       appointment.Selected_Time, 
+      appointment.Selected_Time, 
       supplier.Name,
       supplier.Contact_Number, 
       supplier.Address1,
       supplier.Address2,
-      location.Location_Name
+      location.Location_Name,
+      appointment.Approval
     FROM 
       appointment 
     JOIN 
@@ -414,45 +429,34 @@ app.get('/view_comappointment', (req, res) => {
     ON
       supplier.Location_Id = location.Location_Id
     WHERE
-      appointment.Approval = 'Completed'
+      appointment.Approval IN ('Rejected1', 'Rejected2', 'Completed')
   `;
+
   db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.send(result);
+    if (err) return res.status(500).json({ error: "Internal Server Error" });
+
+    // Map the approval statuses to their corresponding labels
+    const mappedResult = result.map(appointment => {
+      let approvalLabel;
+      switch (appointment.Approval) {
+        case 'Rejected1':
+          approvalLabel = 'Rejected';
+          break;
+        case 'Rejected2':
+          approvalLabel = 'Rejected by Supplier';
+          break;
+        case 'Completed':
+          approvalLabel = 'Completed';
+          break;
+        default:
+          approvalLabel = appointment.Approval;
+      }
+      return { ...appointment, Approval: approvalLabel };
+    });
+
+    res.send(mappedResult);
   });
 });
-
-//View Appointment-employee(rejected)
-app.get('/view_rejappointment', (req, res) => {
-  let sql = `
-    SELECT 
-      appointment.Appointment_ID, 
-      appointment.Date, 
-       appointment.Selected_Time, 
-      supplier.Name,
-      supplier.Contact_Number, 
-      supplier.Address1,
-      supplier.Address2,
-      location.Location_Name
-    FROM 
-      appointment 
-    JOIN 
-      supplier 
-    ON 
-      appointment.Supplier_ID = supplier.Supplier_ID
-    JOIN
-      location
-    ON
-      supplier.Location_Id = location.Location_Id
-    WHERE
-      appointment.Approval = 'Rejected'
-  `;
-  db.query(sql, (err, result) => {
-    if (err) throw err;
-    res.send(result);
-  });
-});
-
 
 
 //-----------------------View Approved Orders-----
@@ -1170,7 +1174,7 @@ app.put('/deactivateProduct/:id', (req, res) => {
 });
 //--------------add product
 
-app.post('/addProduct', (req, res) => {
+/*app.post('/addProduct', (req, res) => {
   const { Product_Name, Cost, Selling_Price } = req.body;
   const sql = 'INSERT INTO product (Product_Name, Cost, Selling_Price) VALUES (?, ?, ?)';
   const values = [Product_Name, Cost, Selling_Price];
@@ -1185,7 +1189,27 @@ app.post('/addProduct', (req, res) => {
       res.status(201).send(newProduct);
     }
   });
+});*/
+app.post('/addProduct', upload.single('Image'), (req, res) => {
+  const { Product_Name, Cost, Selling_Price } = req.body;
+  const imagePath = req.file.path;
+
+  const sql = 'INSERT INTO product (Product_Name, Cost, Selling_Price, Image_Path) VALUES (?, ?, ?, ?)';
+  const values = [Product_Name, Cost, Selling_Price, imagePath];
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('SQL Error:', err);
+      res.status(500).send({ error: 'Database query failed', details: err });
+    } else {
+      const productId = result.insertId;
+      const newProduct = { Product_ID: productId, Product_Name, Cost, Selling_Price, Image_Path: imagePath, In_Stock: 0 };
+      res.status(201).send(newProduct);
+    }
+  });
 });
+
+// Serve static files from the uploads folder
 //*************************Supplier Part */
 //**********Show location and adress */
 app.get('/transport_supplier/:userId', (req, res) => {
@@ -1244,14 +1268,87 @@ app.post('/rawmaterials', (req, res) => {
   });
 });
 
-//************CHARTS */
+//************Appointment(Supplier) */
+
+app.get('/appointment/:supplierId', (req, res) => {
+  const supplierId = req.params.supplierId;
+  const sql = "SELECT * FROM appointment WHERE Supplier_ID = ? AND (Approval = 'Requested' OR Approval = 'Accepted')";
+  
+  db.query(sql, [supplierId], (err, data) => {
+    if (err) return res.status(500).json({ error: "Internal Server Error" });
+    return res.json({ appointments: data });
+  });
+});
+/**************************** */
+app.get('/final_appointment_S/:supplierId', (req, res) => {
+  const supplierId = req.params.supplierId;
+  const sql = `
+    SELECT * FROM appointment 
+    WHERE Supplier_ID = ? 
+    AND (Approval = 'Rejected1' OR Approval = 'Rejected2' OR Approval = 'Completed')
+  `;
+  
+  db.query(sql, [supplierId], (err, data) => {
+    if (err) return res.status(500).json({ error: "Internal Server Error" });
+    return res.json({ appointments: data });
+  });
+});
 
 
 
 
+
+//*************** */
+// Add this new route to handle updating appointment status
+app.put('/appointment/:appointmentId', (req, res) => {
+  const appointmentId = req.params.appointmentId;
+  const { status } = req.body;
+  const sql = "UPDATE appointment SET Approval = ? WHERE Appointment_ID = ?";
+  
+  db.query(sql, [status, appointmentId], (err, result) => {
+    if (err) return res.status(500).json({ error: "Internal Server Error" });
+    return res.json({ success: true });
+  });
+});
+//--------------Price change
+app.get('/api/location_price', (req, res) => {
+  const sql = 'SELECT Location_ID AS ID, Location_Name, Price, Price_WT FROM location';
+  db.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json(results);
+  });
+});
+
+app.post('/api/location_price', (req, res) => {
+  const { Location_Name, Price, Price_WT } = req.body;
+  const sql = 'INSERT INTO location (Location_Name, Price, Price_WT) VALUES (?, ?, ?)';
+  db.query(sql, [Location_Name, Price, Price_WT], (err, result) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json({ id: result.insertId, Location_Name, Price, Price_WT });
+  });
+});
+
+
+app.put('/api/location_price/:id', (req, res) => {
+  const { id } = req.params;
+  const { Price, Price_WT } = req.body;
+  const sql = 'UPDATE location SET Price = ?, Price_WT = ? WHERE Location_ID = ?';
+  db.query(sql, [Price, Price_WT, id], (err, result) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json({ id, Price, Price_WT });
+  });
+});
 
 
 //-------------------------------------------
 app.listen(8081,()=>{
     console.log ("listening...")
 })
+
+

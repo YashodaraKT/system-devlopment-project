@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ProfilenavBar from '../../component/ProfilenavBar';
-import { Table } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Box } from '@mui/material';
 
 function Spayment() {
   
@@ -67,65 +67,74 @@ function Spayment() {
   return (
     <div>
       <div>
-      <div><ProfilenavBar userType="supplier"/></div>
+        <ProfilenavBar userType="supplier" />
       </div>
 
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <h1>Payments</h1>
-      </div>
+      <Box sx={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
+        <Typography variant="h4">Payments</Typography>
+      </Box>
 
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <h2>Monthly Payments</h2>
+      <Box sx={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
+        <Typography variant="h5">Monthly Payments</Typography>
         {Object.keys(monthlyPayments).map((month) => (
-          <div key={month}>
+          <Typography key={month}>
             <strong>{month}:</strong> Rs {monthlyPayments[month].toFixed(2)}
-          </div>
+          </Typography>
         ))}
-      </div>
+      </Box>
 
-      <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>Supply Number</th>
-              <th>Quantity(kg)</th>
-              <th>Date</th>
-              <th>Value(Rs)</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {supplies.map((supply) => {
-              console.log('Supply:', supply);
-              return (
-                <tr key={supply.Supply_ID}>
-                  <td>{supply.Supply_ID}</td>
-                  <td>{supply.Quantity}</td>
-                  <td>{moment(supply.Date).format('DD-MMM-YYYY')}</td>
-                  <td>{supply.Payment}</td>
-                  <td>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        backgroundColor: supply.Payment_Status === 1 ? 'green' : 'red',
-                        color: 'white',
-                        padding: '5px',
-                        borderRadius: '50%',
-                        fontWeight: 'bold',
-                        width: '24px',
-                        height: '24px',
-                        marginRight: '10px'
-                      }}
-                    ></div>
-                    <span>{supply.Payment_Status === 1 ? 'Paid' : 'Unpaid'}</span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
-      </div>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          padding: '20px' 
+        }}
+      >
+        <TableContainer component={Paper} sx={{ width: '80%' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Supply Number</TableCell>
+                <TableCell>Quantity(kg)</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Value(Rs)</TableCell>
+                <TableCell>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {supplies.map((supply) => {
+                console.log('Supply:', supply);
+                return (
+                  <TableRow key={supply.Supply_ID}>
+                    <TableCell>{supply.Supply_ID}</TableCell>
+                    <TableCell>{supply.Quantity}</TableCell>
+                    <TableCell>{moment(supply.Date).format('DD-MMM-YYYY')}</TableCell>
+                    <TableCell>{supply.Payment}</TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          backgroundColor: supply.Payment_Status === 1 ? 'green' : 'red',
+                          color: 'white',
+                          padding: '5px',
+                          borderRadius: '50%',
+                          fontWeight: 'bold',
+                          width: '24px',
+                          height: '24px',
+                          marginRight: '10px'
+                        }}
+                      ></Box>
+                      <span>{supply.Payment_Status === 1 ? 'Paid' : 'Unpaid'}</span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
     </div>
   );
 }

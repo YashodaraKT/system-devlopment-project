@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProfilenavBar from '../../component/ProfilenavBar';
-import { Button, Form, Table, Offcanvas, Alert } from 'react-bootstrap';
+import PendingAppS from '../../component/PendingAppS';
+import FinalAppS from '../../component/FinalAppS';
+import { Button, TextField, FormControlLabel, Checkbox, Alert, Tabs, Tab, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent, DialogActions, Card, CardContent, CardActions } from '@mui/material';
 import moment from 'moment';
 
 function Transport() {
+  const [tabIndex, setTabIndex] = useState(0);
   const [showScheduledAppointments, setShowScheduledAppointments] = useState(false);
   const [size, setSize] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -18,6 +21,8 @@ function Transport() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errors, setErrors] = useState({});
   const [agreement, setAgreement] = useState(false);
+
+  const handleTabChange = (event, newValue) => setTabIndex(newValue);
 
   const handleShowScheduledAppointments = () => setShowScheduledAppointments(true);
   const handleCloseScheduledAppointments = () => setShowScheduledAppointments(false);
@@ -149,127 +154,107 @@ function Transport() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="supplier" /></div>
+      <ProfilenavBar userType="supplier" />
 
-      <div style={{ textAlign: 'center' }}>
-        <h1>Transport</h1>
-      </div>
-      <div style={{ marginLeft: '50px', display: 'inline-block' }}>
-        <Button variant="info" onClick={handleShowScheduledAppointments} style={{ marginLeft: '315px' }}>
-          Appointments
-        </Button>
-      </div>
+      <Box sx={{ width: '100%', typography: 'body1', mt: 2 }}>
+        <Tabs value={tabIndex} onChange={handleTabChange} sx={{ justifyContent: 'flex-start' }}>
+          <Tab label="Transport" />
+          <Tab label="Pending" />
+          <Tab label="Completed and Rejected" />
+        </Tabs>
 
-      <br />
-      <br />
-      <div style={{ margin: 'auto', border: '2px solid black', padding: '20px', width: 'fit-content', fontSize: '20px' }}>
-        <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3" controlId="formBasicAddress">
-            <Form.Label>Address</Form.Label>
-            <Form.Control type="text" value={`${address1}, ${address2}`} readOnly />
-          </Form.Group>
+        {tabIndex === 0 && (
+          <Box sx={{ p: 3, display: 'flex', justifyContent: 'center' }}>
+            <Card variant="outlined" sx={{ width: '500px' }}>
+              <CardContent>
 
-          <Form.Group className="mb-3" controlId="formBasicLocationId">
-            <Form.Label>Location Name</Form.Label>
-            <Form.Control type="text" value={locationName} readOnly />
-          </Form.Group>
+                <form onSubmit={handleSubmit}>
+                  <TextField
+                    fullWidth
+                    label="Address"
+                    value={`${address1}, ${address2}`}
+                    InputProps={{ readOnly: true }}
+                    margin="normal"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Location Name"
+                    value={locationName}
+                    InputProps={{ readOnly: true }}
+                    margin="normal"
+                  />
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Approximate size of the Supply (kg)"
+                    value={size}
+                    onChange={handleSizeChange}
+                    error={!!errors.size}
+                    helperText={errors.size}
+                    margin="normal"
+                    inputProps={{ min: 21 }}
+                  />
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="Relevant Date"
+                    InputLabelProps={{ shrink: true }}
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    error={!!errors.startDate}
+                    helperText={errors.startDate}
+                    margin="normal"
+                  />
+                  <TextField
+                    fullWidth
+                    multiline
+                    label="Description"
+                    value={description}
+                    onChange={handleDescriptionChange}
+                    margin="normal"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={agreement}
+                        onChange={handleAgreementChange}
+                        color="primary"
+                      />
+                    }
+                    label="I agree with the price ranges"
+                  />
+                  {errors.agreement && <Typography color="error">{errors.agreement}</Typography>}
+                  <Button variant="contained" color="success" type="submit" fullWidth sx={{ mt: 2 }}>
+                    Submit
+                  </Button>
+                </form>
 
-          <Form.Group className="mb-3" controlId="formBasicNumDays">
-            <Form.Label>Approximate size of the Supply (kg) <span style={{ color: 'red' }}>*</span></Form.Label>
-            <Form.Control 
-              type="number" 
-              placeholder="Enter the size" 
-              value={size} 
-              onChange={handleSizeChange}
-              isInvalid={!!errors.size}
-              min="21"
-              style={{ 
-                appearance: 'textfield',
-                WebkitAppearance: 'none',
-                MozAppearance: 'none'
-              }}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.size}
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicStartDate">
-            <Form.Label>Relevant Date <span style={{ color: 'red' }}>*</span></Form.Label>
-            <Form.Control 
-              type="date" 
-              placeholder="Select the date" 
-              value={startDate} 
-              onChange={handleStartDateChange}
-              isInvalid={!!errors.startDate}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.startDate}
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicDescription">
-            <Form.Label>Description</Form.Label>
-            <Form.Control 
-              as="textarea" 
-              placeholder="Enter description" 
-              value={description} 
-              onChange={handleDescriptionChange}
-            />
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicAgreement">
-  <Form.Check 
-    type="checkbox" 
-    label={<span style={{ fontSize: '0.8em' }}>I agree with the price ranges</span>} 
-    checked={agreement}
-    onChange={handleAgreementChange}
-    isInvalid={!!errors.agreement}
-  />
-  <Form.Control.Feedback type="invalid">
-    {errors.agreement}
-  </Form.Control.Feedback>
-</Form.Group>
-          <Button variant="success" type="submit">
-            Submit
-          </Button>
-        </Form>
+                {successMessage && <Alert severity="success" sx={{ mt: 2 }}>{successMessage}</Alert>}
 
-        {successMessage && <Alert variant="success" style={{ marginTop: '20px' }}>{successMessage}</Alert>}
+                <Box sx={{ mt: 2 }}>
+                  <ul>
+                    <li>After confirming the transport, our drivers will contact you.</li>
+                    <li>Please ensure your supplies are prepared on time.</li>
+                    <li>Your payment will be reduced due to the transport costs.</li>
+                  </ul>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        )}
 
-        <div style={{ marginTop: '20px' }}>
-          <ul>
-            <li>After confirming the transport, our drivers will contact you.</li>
-            <li>Please ensure your supplies are prepared on time.</li>
-            <li>Your payment will be reduced due to the transport costs.</li>
-          </ul>
-        </div>
-      </div>
+{tabIndex === 1 && (
+  <div>
+    <PendingAppS/>
+  </div>
+)}
+{tabIndex === 2 && (
+  <div>
+    <FinalAppS/>
+  </div>
+)}
 
-      <Offcanvas show={showScheduledAppointments} onHide={handleCloseScheduledAppointments}>
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Scheduled Appointments</Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>Appointment ID</th>
-                <th>Date</th>
-                <th>Size</th>
-                <th>Approval</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((appointment) => (
-                <tr key={appointment.Appointment_ID}>
-                  <td>{appointment.Appointment_ID}</td>
-                  <td>{moment(appointment.Date).format('MM/DD/YYYY')}</td>
-                  <td>{appointment.Size}</td>
-                  <td>{appointment.Approval === 1 ? 'Approved' : appointment.Approval === 10 ? 'Pending' : appointment.Approval === 0 ? 'Declined' : ''}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Offcanvas.Body>
-      </Offcanvas>
+      </Box>
     </div>
   );
 }

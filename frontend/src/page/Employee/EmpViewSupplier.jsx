@@ -4,7 +4,7 @@ import { Table, Container, Button } from 'react-bootstrap';
 import SupplierRegistration from '../../component/SupplierRegistration';
 import EmpBar from '../../component/EmpBar';
 import UpdateSupplier from '../../component/UpdateSupplier'; 
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function EmpViewSupplier() {
   const [modalShow, setModalShow] = useState(false);
@@ -41,7 +41,7 @@ function EmpViewSupplier() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="employee" /></div>
+      <div><ProfileBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
         <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>

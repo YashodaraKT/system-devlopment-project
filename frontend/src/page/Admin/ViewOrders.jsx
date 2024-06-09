@@ -3,7 +3,7 @@ import { Table } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
 import AdminBar from '../../component/AdminBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function ViewOrders() {
   const [orders, setOrders] = useState([]);
@@ -39,7 +39,7 @@ function ViewOrders() {
 
   return (
     <div>
-     <div><ProfilenavBar userType="admin" /></div>
+     <div><ProfileBar pageName="Approved Orders" /></div>
       <div style={{ display: 'flex' }}>
         <div><AdminBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>

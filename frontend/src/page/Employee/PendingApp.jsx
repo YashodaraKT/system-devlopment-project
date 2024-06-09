@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import moment from 'moment';
 import EmpBar from '../../component/EmpBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -27,7 +27,7 @@ function PendingApp() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="employee" /></div>
+      <div><ProfileBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
         <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}></div>

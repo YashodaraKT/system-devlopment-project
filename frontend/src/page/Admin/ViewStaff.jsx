@@ -4,7 +4,7 @@ import { Table, Container, Button } from 'react-bootstrap';
 import StaffRegistration from '../../component/StaffRegistration';
 import AdminBar from '../../component/AdminBar';
 import UpdateStaff from '../../component/UpdateStaff';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function ViewStaff() {
   const [modalShow, setModalShow] = useState(false);
@@ -28,7 +28,7 @@ function ViewStaff() {
 
   return (
     <div>
-     <div><ProfilenavBar userType="admin" /></div>
+     <div><ProfileBar pageName="Staff" /></div>
       <div style={{ display: 'flex' }}>
         <div><AdminBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>

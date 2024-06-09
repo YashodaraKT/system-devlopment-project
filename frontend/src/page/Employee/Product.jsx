@@ -1,10 +1,10 @@
 import React from 'react';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function Product() {
   return (
     <div>
-        <div><ProfilenavBar/></div>
+        <div><ProfileBar/></div>
     </div>
   );
 }

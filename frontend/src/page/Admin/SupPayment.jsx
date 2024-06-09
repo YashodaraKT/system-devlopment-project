@@ -5,7 +5,7 @@ import moment from 'moment';
 import NewSupply from '../../component/NewSupply';
 import SupplyPrice from '../../component/SupplyPrice';
 import AdminBar from '../../component/AdminBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function ViewSupplierPayments() {
   const [supplies, setSupplies] = useState([]);
@@ -124,7 +124,7 @@ function ViewSupplierPayments() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="admin" /></div>
+      <div><ProfileBar pageName="Fish Collection"/></div>
   <div style={{ display: 'flex' }}>
     <div><AdminBar /></div>
     <div style={{ marginLeft: '20px', flexGrow: 1 }}>

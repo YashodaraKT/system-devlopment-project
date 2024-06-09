@@ -14,7 +14,7 @@ function PendingApp() {
   const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:8081/view_comappointment')
+    axios.get('http://localhost:8081/view_final_app_E')
       .then(res => {
         setAppointments(res.data);
       })
@@ -41,6 +41,7 @@ function PendingApp() {
                   <TableCell>Location</TableCell>
                   <TableCell>Date</TableCell>
                   <TableCell>Time</TableCell>
+                  <TableCell>Status</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -58,6 +59,7 @@ function PendingApp() {
                     <TableCell>{appointment.Location_Name}</TableCell>
                     <TableCell>{moment(appointment.Date).format('MM/DD/YYYY')}</TableCell>
                     <TableCell>{appointment.Selected_Time}</TableCell>
+                    <TableCell>{appointment.Approval}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

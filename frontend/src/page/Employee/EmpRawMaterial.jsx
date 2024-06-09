@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Table, Container, Form, Button } from 'react-bootstrap';
 import RMinv from '../../component/RMinv';
 import EmpBar from '../../component/EmpBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function RawMaterial() {
   const [rawMaterials, setRawMaterials] = useState([]);
@@ -102,7 +102,7 @@ function RawMaterial() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="employee" /></div>
+      <div><ProfileBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
         <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>

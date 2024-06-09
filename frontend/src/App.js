@@ -1,7 +1,9 @@
 import logo from './logo.svg';
+
 import './App.css';
 import Home from './page/Home';
 import Login from './page/Login';
+import ProductCart from './page/ProductCart';
 import SupplierHome from './page/Supplier/SupplierHome';
 import Transport from './page/Supplier/Transport';
 import Spayment from './page/Supplier/Spayment';
@@ -21,6 +23,7 @@ import NewOrders from './page/Admin/NewOrders';
 import ViewSupplier from './page/Admin/ViewSupplier';
 import ViewCustomer from './page/Admin/ViewCustomer';
 import ViewStaff from './page/Admin/ViewStaff';
+import PriceRange from './page/Admin/PriceRange';
 import SupPayment from './page/Admin/SupPayment';
 import RawMaterial from './page/Admin/RawMaterial';
 import Production from './page/Admin/Production';
@@ -39,6 +42,7 @@ function App() {
   return (
     <div className="App">
   <BrowserRouter>
+
 <Routes>
 <Route path='/' element={<Home/>}></Route>
 <Route path='/login' element={<Login/>}></Route>
@@ -73,6 +77,8 @@ function App() {
 <Route path='/pendingapp' element={<PendingApp/>}></Route>
 <Route path='/ftest' element={<FTest/>}></Route>
 <Route path='/newsupplier' element={<AddSupplier/>}></Route>
+<Route path='/productcart' element={<ProductCart/>}></Route>
+<Route path='/pricerange' element={<PriceRange/>}></Route>
 </Routes>
 
 

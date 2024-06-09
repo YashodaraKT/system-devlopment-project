@@ -4,10 +4,15 @@ import { Container, Button, Table, TableRow, TableCell, TableBody, Card, CardCon
 import SupplierRegistration from '../../component/SupplierRegistration';
 import AdminBar from '../../component/AdminBar';
 import UpdateSupplier from '../../component/UpdateSupplier'; 
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
+
 
 
 function ViewSupplier() {
+ 
+
+
+
   const [modalShow, setModalShow] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -43,11 +48,11 @@ function ViewSupplier() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="admin" /></div>
+      <div><ProfileBar pageName="Supplier"/></div>
       <div style={{ display: 'flex' }}>
         <div><AdminBar /></div>
-        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
-          <Container className="mt-5">
+        <div style={{ flexGrow: 1 }}>
+        {/*<Container className="mt-5">*/}
             <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
               <Tab label="View Supplier" />
               <Tab label="Add" />      
@@ -55,16 +60,6 @@ function ViewSupplier() {
             </Tabs>
             {tabValue === 0 && (
               <div>
-                <Card variant="outlined">
-                  <CardContent>
-                    <h1 style={{ marginBottom: '20px' }}>Registered Suppliers</h1>
-                  </CardContent>
-                </Card>
-                <Button variant="contained" onClick={() => setModalShow(true)}>
-                  Add Supplier
-                </Button>
-                <br />
-                <br />
                 <Table>
                   <thead>
                     <TableRow>
@@ -100,10 +95,7 @@ function ViewSupplier() {
                     ))}
                   </TableBody>
                 </Table>
-                <SupplierRegistration
-                  show={modalShow}
-                  onHide={() => setModalShow(false)}
-                />
+              
                 {selectedSupplier && (
                   <UpdateSupplier
                     show={editModalShow}
@@ -120,10 +112,11 @@ function ViewSupplier() {
                 <SupplierRegistration/>
               </div>
             )}
-          </Container>
+         {/* </Container>*/}
         </div>
       </div>
-    </div>
+ 
+ </div>
   );
 }
 

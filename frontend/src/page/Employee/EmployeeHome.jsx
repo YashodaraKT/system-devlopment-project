@@ -1,14 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmpBar from '../../component/EmpBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function AdminHome() {
     const Navigate= useNavigate();
 
     return (
       <div>
-        <div><ProfilenavBar userType="admin" />
+        <div><ProfileBar pageName="Home"  />
         
         </div>
         <div>

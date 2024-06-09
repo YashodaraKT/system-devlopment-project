@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Table, Container, Button, Modal } from 'react-bootstrap';
 import ProductInv from '../../component/ProductInv';
 import EmpBar from '../../component/EmpBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function Production() {
   const [productions, setProductions] = useState([]);
@@ -92,7 +92,7 @@ function Production() {
 
   return (
     <div>
-      <div><ProfilenavBar userType="employee" /></div>
+      <div><ProfileBar userType="employee" /></div>
       <div style={{ display: 'flex' }}>
         <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>

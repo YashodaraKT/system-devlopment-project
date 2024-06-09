@@ -32,7 +32,7 @@ function Hnbar() {
           <Navbar.Brand style={navbarStyle}>Omega</Navbar.Brand>
           <Nav className="me-auto">
           <Nav.Link style={navLinkStyle} href="/">Home</Nav.Link>
-          <Nav.Link style={navLinkStyle} href="products">Our Products</Nav.Link>
+          <Nav.Link style={navLinkStyle} href="productcart">Our Products</Nav.Link>
           </Nav>
           <Nav>
             <Nav.Link style={navLinkStyle} href="login">Login</Nav.Link>

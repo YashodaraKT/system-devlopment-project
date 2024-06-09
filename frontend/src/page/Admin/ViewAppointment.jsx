@@ -3,7 +3,7 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import moment from 'moment';
 import AdminBar from '../../component/AdminBar';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import ProfileBar from '../../component/ProfileBar';
 
 function AppointmentList() {
   const [appointments, setAppointments] = useState([]);
@@ -42,7 +42,7 @@ function AppointmentList() {
 
   return (
     <div>
-     <div><ProfilenavBar userType="admin" /></div>
+     <div><ProfileBar userType="admin" /></div>
       <div style={{ display: 'flex' }}>
         <div><AdminBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}></div>
