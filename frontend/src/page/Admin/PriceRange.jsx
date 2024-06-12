@@ -82,7 +82,7 @@ function App() {
               <TableCell>ID</TableCell>
               <TableCell>Location Name</TableCell>
               <TableCell>Price</TableCell>
-              <TableCell>Price WT</TableCell>
+              <TableCell>Price(Without Transport)</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>

@@ -35,17 +35,66 @@ function SupplierRegistrationPage() {
     fetchData();
   }, []);
 
+  const validateForm = () => {
+    const nameRegex = /^[A-Za-z\s]{1,50}$/;
+    const address1Regex = /^.{1,40}$/;
+    const address2Regex = /^[A-Z][a-zA-Z\s]{0,24}$/;
+    const contactNumberRegex = /^0\d{9}$/;
+    const userNameRegex = /^[a-zA-Z0-9]{1,15}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,15}$/;
+
+    if (!name.match(nameRegex)) {
+      toast.error("Name must be letters only and up to 50 characters.");
+      return false;
+    }
+    if (!address1.match(address1Regex)) {
+      toast.error("Village must be up to 40 characters.");
+      return false;
+    }
+    if (!address2.match(address2Regex)) {
+      toast.error("City must be up to 25 characters, start with a capital letter, and contain only letters.");
+      return false;
+    }
+    if (!contactNumber.match(contactNumberRegex)) {
+      toast.error("Contact number must start with 0 and be exactly 10 digits.");
+      return false;
+    }
+    if (!userName.match(userNameRegex)) {
+      toast.error("Username must be up to 15 characters long and can contain letters and numbers.");
+      return false;
+    }
+    if (!password.match(passwordRegex)) {
+      toast.error("Password must be 8-15 characters long, contain at least one letter and one number.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const checkUserNameExists = async (userName) => {
+    try {
+      const response = await axios.get(`http://localhost:8081/user?UserName=${userName}`);
+      return response.data.exists;
+    } catch (error) {
+      console.error('Error checking username:', error);
+      return true; // Assume the username exists if there's an error checking
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // Form validation: Check if any field is blank
-    if (!userName || !password || !name || !contactNumber || !address1 || !address2 || !transport || !selectedLocation) {
-      toast.error("Please fill in all fields.");
+    if (!validateForm()) {
+      return;
+    }
+
+    const userNameExists = await checkUserNameExists(userName);
+    if (userNameExists) {
+      toast.error("Username already exists. Please choose another.");
       return;
     }
 
     try {
-      // Send a POST request to create a new user
       const userResponse = await axios.post('http://localhost:8081/user', {
         User_Name: userName,
         User_Type: 'Supplier',
@@ -53,10 +102,8 @@ function SupplierRegistrationPage() {
       });
 
       if (userResponse.status >= 200 && userResponse.status < 300) {
-        // Extract the User_ID from the response
         const userId = userResponse.data.User_ID;
 
-        // Send a POST request to create a new supplier, with the retrieved User_ID
         const supplierResponse = await axios.post('http://localhost:8081/supplier', {
           Name: name,
           Contact_Number: contactNumber,
@@ -65,19 +112,15 @@ function SupplierRegistrationPage() {
           Transport: transport,
           Location_Id: selectedLocation,
           User_ID: userId,
-          R_User_ID: userId // Assuming this should be the same as User_ID
+          R_User_ID: userId
         });
 
-        // Show success notification
         toast.success("Supplier registered successfully!");
-
-        // Clear form fields
         clearForm();
       } else {
         toast.error("Error registering user. Please try again.");
       }
     } catch (error) {
-      // Show error notification
       toast.error("Error registering supplier. Please try again.");
       console.error('Error:', error.response.data);
     }
@@ -96,7 +139,6 @@ function SupplierRegistrationPage() {
 
   return (
     <Container>
-    
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12}>

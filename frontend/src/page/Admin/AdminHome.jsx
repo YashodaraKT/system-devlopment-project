@@ -1,21 +1,27 @@
 import React from 'react';
-import  ProfileBar from '../../component/ProfileBar';
+import ProfileBar from '../../component/ProfileBar';
 import AdminBar from '../../component/AdminBar';
-import InvPieChart from '../../component/PieChart';
-
+import PieChart from '../../component/PieChart';
+import Process from '../../component/Process';
 
 function AdminHome() {
-
-
   return (
     <div>
       <ProfileBar pageName="Home" />
       <div style={{ display: 'flex' }}>
-        <AdminBar />
-        <div style={{ marginLeft: '20px', flexGrow: 1 }}>
-          <InvPieChart />
+        <div>
+          <AdminBar />
         </div>
-        
+        <div style={{ flexGrow: 1, padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+          <div style={{ width: '350px', height: '350px' }}>
+            <h2>Sales</h2>
+            <PieChart />
+          </div>
+          <div style={{ width: '350px', height: '350px' }}>
+            <h2>Sales</h2>
+            <Process />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -129,8 +129,7 @@ function ViewSupplierPayments() {
     <div><AdminBar /></div>
     <div style={{ marginLeft: '20px', flexGrow: 1 }}>
       <div style={{ marginLeft: '50px', padding: '20px', width: 'fit-content' }}>
-        <h1 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Supplier Payments</h1>
+        
           <Form.Group style={{ marginBottom: 0, marginLeft: 'auto' }}>
             <Form.Control
               type="text"

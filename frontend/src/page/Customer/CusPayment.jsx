@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import CustomerBar from '../../component/CustomerBar';
 import axios from 'axios';
 import moment from 'moment';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Box } from '@mui/material';
@@ -46,7 +46,7 @@ function CusPayment() {
 
   return (
     <div>
-      <ProfilenavBar userType="customer" />
+      <CustomerBar/>
 
       <Box sx={{ textAlign: 'center', padding: '20px', width: 'fit-content', margin: 'auto' }}>
         <Typography variant="h4">Payments</Typography>
@@ -71,7 +71,7 @@ function CusPayment() {
                     </Box>
                   </Box>
                 </TableCell>
-                <TableCell sx={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px' }}>Total Payment(Rs)</TableCell>
+                <TableCell sx={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px' }}>Payment(Rs)</TableCell>
                 <TableCell sx={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px' }}>Deliver Date</TableCell>
                 <TableCell sx={{ backgroundColor: '#1F618D', color: 'white', textAlign: 'center', fontSize: '18px' }}>Status</TableCell>
               </TableRow>

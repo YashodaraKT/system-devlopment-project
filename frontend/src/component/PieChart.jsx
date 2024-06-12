@@ -1,85 +1,97 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import Chart from 'chart.js/auto';
 import axios from 'axios';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import 'chart.js/auto';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
-import { Container, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
-import { Box, Typography } from '@mui/material'; // Import MUI components
 
-ChartJS.register(ArcElement, Tooltip, Legend);
-
-function PieChartComponent() {
-  const [chartData, setChartData] = useState(null);
+const PieChart = () => {
+  const chartContainer = useRef(null); // Reference to the chart canvas
+  const [chartInstance, setChartInstance] = useState(null); // State to hold the chart instance
 
   useEffect(() => {
-    axios.get('http://localhost:8081/productsdw')
-      .then(response => {
-        const productNames = response.data.map(item => item.Product_Name);
-        const inStock = response.data.map(item => item.In_Stock);
+    let newChartInstance = null;
 
-        const data = {
-          labels: productNames,
-          datasets: [
-            {
-              label: 'In Stock',
-              data: inStock,
-              backgroundColor: [
-                'rgba(255, 99, 132, 0.5)',
-                'rgba(54, 162, 235, 0.5)',
-                'rgba(255, 206, 86, 0.5)',
-                'rgba(75, 192, 192, 0.5)',
-                'rgba(153, 102, 255, 0.5)',
-                
-              ],
-              borderColor: 'black',
-              borderWidth: 1,
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('http://localhost:8081/api/order_items');
+        const data = response.data;
+
+        // Prepare data for Chart.js
+        const labels = data.map(item => `Product ${item.Product_Name}: ${item.totalQuantity}`);
+        const quantities = data.map(item => item.totalQuantity);
+
+        // Ensure the chart container is available
+        if (chartContainer.current) {
+          // Destroy the previous chart instance if it exists
+          if (chartInstance) {
+            chartInstance.destroy();
+          }
+
+          // Create Chart.js pie chart
+          const ctx = chartContainer.current.getContext('2d');
+          newChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+              labels: labels,
+              datasets: [{
+                data: quantities,
+                backgroundColor: [
+                  '#D60000',
+                  '#F46300',
+                  '#0358B6',
+                  '#44DE28',
+                  '#8A2BE2' // Add more colors if more products
+                ],
+              }]
             },
-          ],
-        };
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                  labels: {
+                    // Set the legend labels to include the quantity
+                    generateLabels: (chart) => {
+                      const data = chart.data;
+                      return data.labels.map((label, i) => ({
+                        text: label,
+                        fillStyle: data.datasets[0].backgroundColor[i],
+                        hidden: isNaN(data.datasets[0].data[i]),
+                        index: i
+                      }));
+                    }
+                  }
+                },
+                // Disable the tooltip
+                tooltip: {
+                  enabled: false
+                }
+              }
+            }
+          });
 
-        setChartData(data);
-        console.log(chartData); // Print chartData to the console
-      })
-      .catch(error => console.error('Error fetching data:', error));
-  }, []);
+          // Set the chart instance to state
+          setChartInstance(newChartInstance);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
 
-  const options = {
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'right',
-      },
-    },
-  };
+    fetchData();
+
+    // Cleanup on component unmount
+    return () => {
+      // Destroy the chart instance when component unmounts
+      if (newChartInstance) {
+        newChartInstance.destroy();
+      }
+    };
+  }, []); // Empty dependency array ensures useEffect runs once on component mount
 
   return (
-    <Container fluid className="p-4"> {/* Use Bootstrap Container and padding */}
-      <Row> {/* Use Bootstrap Row */}
-        <Col> {/* Use Bootstrap Col */}
-          <Box
-            sx={{
-              backgroundColor: 'green',
-              color: 'white',
-              p: 1,
-              mb: 2,
-              borderRadius: 1,
-            }}
-          >
-            {/* Use MUI Box and styling */}
-            <Typography variant="h5">Product Inventory</Typography> {/* Use MUI Typography */}
-          </Box>
-        </Col>
-      </Row>
-      <Row> {/* Use Bootstrap Row */}
-        <Col> {/* Use Bootstrap Col */}
-          {chartData && (
-            <Pie data={chartData} options={options} redraw />
-          )}
-        </Col>
-      </Row>
-    </Container>
+    <div style={{ width: '350px', height: '350px' }}>
+      <canvas ref={chartContainer} id="myPieChart"></canvas>
+    </div>
   );
-}
+};
 
-export default PieChartComponent;
+export default PieChart;

@@ -45,7 +45,7 @@ function Desc() {
               <Accordion.Body style={{ textAlign: 'justify' }}>
                 <ul style={{ listStyleType: 'none' }}>
               <li> <img src={image1} alt="Image 1" style={{ width: '125px', height: '125px' }}/>
-              View own payments for the past two months.</li>
+              View own payments.</li>
               <li><img src={image2} alt="Image 2" style={{ width: '125px', height: '125px' }}/>
                 Check payment status (payable/paid).</li>
               <li><img src={image3} alt="Image 3" style={{ width: '125px', height: '125px' }}/>

@@ -39,13 +39,17 @@ function ProductChart() {
                 <Typography gutterBottom variant="h5" component="div">
                   {product.Product_Name}
                 </Typography>
+                <Typography variant="h6" color="text.primary">
+                  Rs{product.Selling_Price}(per kg)
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {product.Description}
                 </Typography>
               </CardContent>
               <CardActions>
-                <Button size="small">Share</Button>
                 <Button size="small">Learn More</Button>
+               
+               
               </CardActions>
             </Card>
           );

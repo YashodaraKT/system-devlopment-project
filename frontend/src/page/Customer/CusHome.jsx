@@ -1,73 +1,66 @@
-import React from 'react';
-import { Button, Container, Card, Row, Col } from 'react-bootstrap';
-import h1Image from '../../assets/h1.png'; 
-import ProfilenavBar from '../../component/ProfilenavBar';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import CustomerBar from '../../component/CustomerBar';
 import Footer from '../../component/Footer';
 
-function CusHome() {
-  const navigate = useNavigate();
+function ProductChart() {
+  const [products, setProducts] = useState([]);
 
-  const cardStyle = {
-    width: '18rem',
-    border: '2px solid black' // Adjust the border thickness and color as needed
-  };
+  useEffect(() => {
+    // Fetch Product data from the backend when the component mounts
+    fetch('http://localhost:8081/viewProducts')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data); // Log data to check the structure and image paths
+        setProducts(data);
+      })
+      .catch(error => console.error('Error fetching products:', error));
+  }, []);
 
   return (
-    <>
-      <div><ProfilenavBar userType="customer" /></div>
+    <div>
+      <div><CustomerBar/></div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', gap: '20px', margin: '40px' }}>
+        {products.map(product => {
+          // Correct the image path and handle empty paths
+          const imagePath = product.Image_Path ? `http://localhost:8081/${product.Image_Path.replace(/\\/g, '/')}` : 'default-image-url';
 
-      <br />
-      <br />
-      <div className="d-flex justify-content-around">
-        <Container>
-          <Row>
-            <Col xs={6} md={4}>
-              <Card style={cardStyle}>
-                <Card.Img variant="top" src={h1Image} />
-                <Card.Body>
-                  <Card.Title>Orders</Card.Title>
-                  <Card.Text>
-                    Easily place orders for your needs and also you can check your bill here.
-                  </Card.Text>
-                  <Button onClick={() => navigate("/orders")} variant="primary">View Details</Button>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col xs={6} md={4}>
-              <Card style={cardStyle}>
-                <Card.Img variant="top" src={h1Image} />
-                <Card.Body>
-                  <Card.Title>Payments</Card.Title>
-                  <Card.Text>
-                    Quickly check past orders and see if they've been paid or are still outstanding.
-                  </Card.Text>
-                  <Button onClick={() => navigate("/cpayment")} variant="primary">View Details</Button>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col xs={6} md={4}>
-              <Card style={cardStyle}>
-                <Card.Img variant="top" src={h1Image} />
-                <Card.Body>
-                  <Card.Title>Order Calendar</Card.Title>
-                  <Card.Text>
-                  View your pending, approved, and rejected orders along with their details effortlessly.
-                  </Card.Text>
-                  <Button onClick={() => navigate("/ocalendar")} variant="primary">View Details</Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
+          return (
+            <Card key={product.Product_ID} sx={{ maxWidth: 345 }}>
+              <CardMedia
+                sx={{ height: 140 }}
+                image={imagePath}
+                title={product.Product_Name}
+                onError={(e) => { e.target.onerror = null; e.target.src = 'fallback-image-url'; }}
+              />
+              <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                  {product.Product_Name}
+                </Typography>
+                <Typography variant="h6" color="text.primary">
+                  Rs{product.Selling_Price}(per kg)
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {product.Description}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button size="small">Learn More</Button>
+               
+               
+              </CardActions>
+            </Card>
+          );
+        })}
       </div>
-      <br />
-      <br />
-      <div><Footer /></div>
-    </>
-  ); 
+      <div><Footer/></div>
+    </div>
+  );
 }
 
-export default CusHome;
+export default ProductChart;

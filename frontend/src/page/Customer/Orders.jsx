@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import CustomerBar from '../../component/CustomerBar';
 import { Modal, Button, Form,Tooltip, OverlayTrigger} from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
@@ -111,7 +111,7 @@ function CusPayment() {
     <div>
 
       <div>
-        <ProfilenavBar userType="customer"/>
+        <CustomerBar/>
       </div>
        <br/>
        <br/>
@@ -168,7 +168,9 @@ function CusPayment() {
             />
           </Form.Group>
 
-          
+          <Form.Group controlId="formBasicCheckbox" style={{fontSize:"14px"}}>
+  <Form.Check type="checkbox" label="I agree with the price levels" required />
+</Form.Group>
 
           <OverlayTrigger
           placement="top"

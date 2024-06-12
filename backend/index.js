@@ -280,7 +280,7 @@ app.get('/calendar_order/:customerId', (req, res) => {
   GROUP_CONCAT(CONCAT(p.Product_Name, ' - ', oi.Quantity, '  - ', oi.Value, ' ')) AS Products,
   SUM(oi.Quantity * oi.Value) AS Total_Value,
   SUM(oi.Value) AS Total_Payment,
-  o.Approval
+  o.Approval,o.Process
 FROM customer_order o
 JOIN order_item oi ON oi.Order_ID = o.Order_ID
 JOIN product p ON oi.Product_ID = p.Product_ID
@@ -500,14 +500,14 @@ app.put('/approved_payments/:orderId', (req, res) => {
 
 //-----------------------View pendingOrders-----
 app.get('/pending_orders', (req, res) => {
-  const sql = `SELECT customer_order.Order_ID, customer_order.Customer_ID,  customer_order.Order_Date, customer_order.Deliver_Date, customer.Name, customer.Contact_Number,
+  const sql = `SELECT customer_order.Order_ID, customer_order.Customer_ID, customer_order.Order_Date, customer_order.Deliver_Date, customer.Name, customer.Contact_Number,
   GROUP_CONCAT(CONCAT_WS(' - ', product.Product_Name, order_item.Quantity, order_item.Value) SEPARATOR ',\n') as 'Product Details'
-FROM customer_order
-INNER JOIN customer ON customer_order.Customer_ID = customer.Customer_ID
-LEFT JOIN order_item ON customer_order.Order_ID = order_item.Order_ID
-LEFT JOIN product ON order_item.Product_ID = product.Product_ID
-WHERE customer_order.Approval = 10
-GROUP BY customer_order.Order_ID;`;
+  FROM customer_order
+  INNER JOIN customer ON customer_order.Customer_ID = customer.Customer_ID
+  LEFT JOIN order_item ON customer_order.Order_ID = order_item.Order_ID
+  LEFT JOIN product ON order_item.Product_ID = product.Product_ID
+  WHERE customer_order.Approval = 10
+  GROUP BY customer_order.Order_ID;`;
 
   db.query(sql, (err, data) => {
     if (err) {
@@ -518,10 +518,13 @@ GROUP BY customer_order.Order_ID;`;
     return res.json({ orders: data });
   });
 });
-// ------------------------------------Endpoint to approve or decline an order
+
+// Endpoint to approve or decline an order
 app.put("/Approval_orders/:orderId", (req, res) => {
   const orderId = req.params.orderId;
   const { Approval } = req.body;
+
+  console.log(`Received request to update order ${orderId} with approval status ${Approval}`);
 
   // Calculate the total payment for the order
   const sqlGetPayment = `SELECT SUM(Value) AS TotalPayment FROM order_item WHERE Order_ID = ?`;
@@ -529,67 +532,96 @@ app.put("/Approval_orders/:orderId", (req, res) => {
   db.query(sqlGetPayment, [orderId], (err, results) => {
     if (err) {
       console.error("Error calculating payment:", err);
-      return res.status(500).json({ error: "Internal Server Error" });
+      return res.status(500).json({ error: "Error calculating payment" });
     }
 
     const totalPayment = results[0].TotalPayment;
+    console.log(`Total payment for order ${orderId} is ${totalPayment}`);
 
     if (Approval === 1) {
-      // Insert a new record into the approved_order table
-      const sqlInsertApproved = `INSERT INTO approved_order (Order_ID, Payment) VALUES (?, ?)`;
-
-      db.query(sqlInsertApproved, [orderId, totalPayment], (err, result) => {
-        if (err) {
-          console.error("Error inserting into approved_order:", err);
-          return res.status(500).json({ error: "Internal Server Error" });
-        }
-        console.log("Record inserted into approved_order:", result);
-      });
-
-      // Update the In_Stock value in the product table
+      // Check stock levels
       const sqlGetOrderItems = `SELECT Product_ID, Quantity FROM order_item WHERE Order_ID = ?`;
 
       db.query(sqlGetOrderItems, [orderId], (err, orderItems) => {
         if (err) {
           console.error("Error fetching order items:", err);
-          return res.status(500).json({ error: "Internal Server Error" });
+          return res.status(500).json({ error: "Error fetching order items" });
         }
 
-        const updatePromises = orderItems.map(item => {
-          const updateStockSql = `
-            UPDATE product
-            SET In_Stock = In_Stock - ?
-            WHERE Product_ID = ?
-          `;
+        const stockCheckPromises = orderItems.map(item => {
+          const sqlCheckStock = `SELECT In_Stock FROM product WHERE Product_ID = ?`;
 
           return new Promise((resolve, reject) => {
-            db.query(updateStockSql, [item.Quantity, item.Product_ID], (updateErr, updateResult) => {
-              if (updateErr) {
-                reject(updateErr);
+            db.query(sqlCheckStock, [item.Product_ID], (err, result) => {
+              if (err) {
+                console.error(`Error checking stock for Product_ID ${item.Product_ID}:`, err);
+                reject(err);
+              } else if (result[0].In_Stock < item.Quantity) {
+                console.log(`Insufficient stock for Product_ID ${item.Product_ID}`);
+                reject(new Error(`Insufficient stock for Product_ID ${item.Product_ID}`));
               } else {
-                resolve(updateResult);
+                resolve();
               }
             });
           });
         });
 
-        Promise.all(updatePromises)
+        Promise.all(stockCheckPromises)
           .then(() => {
-            // Update the customer_order table
-            const sqlUpdateOrder = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+            // Stock levels are sufficient, proceed with approval
+            const sqlInsertApproved = `INSERT INTO approved_order (Order_ID, Payment) VALUES (?, ?)`;
 
-            db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
+            db.query(sqlInsertApproved, [orderId, totalPayment], (err, result) => {
               if (err) {
-                console.error("Error updating order:", err);
-                return res.status(500).json({ error: "Internal Server Error" });
+                console.error("Error inserting into approved_order:", err);
+                return res.status(500).json({ error: "Error inserting into approved_order" });
               }
-              console.log("Order updated:", result);
-              return res.json({ message: "Order updated successfully" });
+              console.log("Record inserted into approved_order:", result);
+
+              // Update the In_Stock value in the product table
+              const updateStockPromises = orderItems.map(item => {
+                const updateStockSql = `
+                  UPDATE product
+                  SET In_Stock = In_Stock - ?
+                  WHERE Product_ID = ?
+                `;
+
+                return new Promise((resolve, reject) => {
+                  db.query(updateStockSql, [item.Quantity, item.Product_ID], (updateErr, updateResult) => {
+                    if (updateErr) {
+                      console.error(`Error updating stock for Product_ID ${item.Product_ID}:`, updateErr);
+                      reject(updateErr);
+                    } else {
+                      console.log(`Stock updated for Product_ID ${item.Product_ID}:`, updateResult);
+                      resolve(updateResult);
+                    }
+                  });
+                });
+              });
+
+              Promise.all(updateStockPromises)
+                .then(() => {
+                  // Update the customer_order table
+                  const sqlUpdateOrder = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+
+                  db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
+                    if (err) {
+                      console.error("Error updating order:", err);
+                      return res.status(500).json({ error: "Error updating order" });
+                    }
+                    console.log("Order updated:", result);
+                    return res.json({ message: "Order updated successfully" });
+                  });
+                })
+                .catch(updateErr => {
+                  console.error("Error updating stock:", updateErr);
+                  return res.status(500).json({ error: "Error updating stock" });
+                });
             });
           })
-          .catch(updateErr => {
-            console.error("Error updating stock:", updateErr);
-            return res.status(500).json({ error: "Internal Server Error" });
+          .catch(stockErr => {
+            console.error("Stock validation error:", stockErr);
+            return res.status(400).json({ error: stockErr.message });
           });
       });
     } else {
@@ -599,7 +631,7 @@ app.put("/Approval_orders/:orderId", (req, res) => {
       db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
         if (err) {
           console.error("Error updating order:", err);
-          return res.status(500).json({ error: "Internal Server Error" });
+          return res.status(500).json({ error: "Error updating order" });
         }
         console.log("Order updated:", result);
         return res.json({ message: "Order updated successfully" });
@@ -607,6 +639,26 @@ app.put("/Approval_orders/:orderId", (req, res) => {
     }
   });
 });
+
+//**************************processs */
+app.put('/process_order/:orderId', (req, res) => {
+  const orderId = req.params.orderId; 
+  const { Process } = req.body;
+
+  console.log(`Received request to update process status for order ${orderId} to ${Process}`);
+
+  // Update the process status in the customer_order table
+  const sqlUpdateProcess = `UPDATE customer_order SET Process = ? WHERE Order_ID = ?`;
+
+  db.query(sqlUpdateProcess, [Process, orderId], (err, result) => {
+    if (err) {
+      console.error('Error updating process status:', err);
+      return res.status(500).json({ error: 'Error updating process status' });
+    }
+    console.log('Process status updated:', result);
+    return res.json({ message: 'Process status updated successfully' });
+  });
+}); 
 
 
 //---------------get Productname
@@ -623,7 +675,6 @@ app.get('/products', (req, res) => {
 });
 
 //---------------------------
-
 app.post('/enter_customer_order', async (req, res) => {
   try {
     const { Customer_ID, Deliver_Date, orderItems } = req.body;
@@ -664,7 +715,8 @@ app.post('/enter_customer_order', async (req, res) => {
     console.error('Error placing order:', error);
     res.status(500).json({ error: 'Failed to place order' });
   }
-});
+}); 
+
 
 
 //----------view supplier
@@ -1388,8 +1440,71 @@ app.put('/api/location_price/:id', (req, res) => {
     res.json({ id, Price, Price_WT });
   });
 });
+//***************************** */
+app.get('/api/inventory', (req, res) => {
+  const query = 'SELECT Product_Name, In_Stock FROM product';
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json(results);
+  }); 
+});
 
+app.get('/api/production', (req, res) => {
+  const query = 'SELECT Product_ID, SUM(Quantity) AS TotalQuantity FROM production GROUP BY Product_ID'; // Adjust the table/column names as needed
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json(results);
+  });
+});
 
+//******************************* */
+app.get('/api/order_items', (req, res) => {
+  const sql = `
+    SELECT p.Product_ID, p.Product_Name, SUM(oi.Quantity) AS totalQuantity
+    FROM order_item oi
+    JOIN product p ON oi.Product_ID = p.Product_ID
+    WHERE EXISTS (
+      SELECT 1
+      FROM approved_order ao
+      WHERE ao.Order_ID = oi.Order_ID
+    )
+    GROUP BY p.Product_ID, p.Product_Name
+  `;
+  db.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(result);
+    }
+  });
+});
+//**********Process */
+app.get('/api/process_products', (req, res) => {
+  const query = `
+    SELECT 
+      p.Product_ID,
+      p.Product_Name,
+      p.In_Stock,
+      SUM(oi.Quantity) as Total_Quantity_Ordered
+    FROM product p
+    LEFT JOIN order_item oi ON p.Product_ID = oi.Product_ID
+    LEFT JOIN customer_order co ON oi.Order_ID = co.Order_ID
+    WHERE co.Process = 'Yes' AND co.Approval = 10
+    GROUP BY p.Product_ID, p.Product_Name, p.In_Stock;
+  `;
+
+  connection.query(query, (error, results) => {
+    if (error) {
+      res.status(500).send(error);
+      return;
+    }
+    res.json(results);
+  });
+});
 //-------------------------------------------
 app.listen(8081,()=>{
     console.log ("listening...")
