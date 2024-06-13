@@ -48,18 +48,61 @@ function AdminAuth({ children }) {
   useEffect(() => {
     console.log(user,userType)
     if (!user || userType !== 'Admin') {
-      navigate('/login'); // Redirect to login if not authenticated or not an admin
+      navigate('/'); 
     }
   }, [user, userType, navigate]);
 
-  return user && userType == 'Admin' ? children : null; // Render children if admin, else render nothing
+  return user && userType == 'Admin' ? children : null; 
 }
+
+//********************************************************** */
+function EmployeeAuth({ children }) {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
+  const userType = user ? user.User_Type : null;
+
+  useEffect(() => {
+    console.log(user,userType)
+    if (!user || userType !== 'Employee') {
+      navigate('/'); 
+    }
+  }, [user, userType, navigate]);
+
+  return user && (userType == 'Admin'|| userType == 'Employee' )? children : null;
+}
+
+
+
 
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
         <Routes>
+
+        <Route path='/adminhome' element={<AdminAuth><AdminHome /></AdminAuth>}></Route>
+        <Route path='/viewsupplier' element={<AdminAuth><ViewSupplier /></AdminAuth>}></Route>
+        <Route path='/viewcustomer' element={<AdminAuth><ViewCustomer /></AdminAuth>}></Route>
+        <Route path='/viewstaff' element={<AdminAuth><ViewStaff /></AdminAuth>}></Route>
+        <Route path='/vieworders' element={<AdminAuth><ViewOrders /></AdminAuth>}></Route>
+        <Route path='/neworders' element={<AdminAuth><NewOrders /></AdminAuth>}></Route>
+        <Route path='/production' element={<AdminAuth><Production /></AdminAuth>}></Route>
+        <Route path='/rawmaterial' element={<AdminAuth><RawMaterial /></AdminAuth>}></Route>
+        <Route path='/suppayment' element={<AdminAuth><SupPayment /></AdminAuth>}></Route>
+        <Route path='/product' element={<AdminAuth><Product /></AdminAuth>}></Route>  
+        <Route path='/material' element={<AdminAuth><Material /></AdminAuth>}></Route>
+        <Route path='/pricerange' element={<AdminAuth><PriceRange /></AdminAuth>}></Route>
+
+        <Route path='/emphome' element={<EmployeeAuth><EmployeeHome/></EmployeeAuth>}></Route>
+
+
+
+
+
+
+
+
+
           <Route path='/' element={<Home />}></Route>
           <Route path='/login' element={<Login />}></Route>
           <Route path='/SupplierHome' element={<SupplierHome />}></Route>
@@ -67,22 +110,17 @@ function App() {
           <Route path='/spayment' element={<Spayment />}></Route>
           <Route path='/cpayment' element={<CusPayment />}></Route>
           <Route path='/cushome' element={<CusHome />}></Route>
-          <Route path='/emphome' element={<EmployeeHome />}></Route>
+       
           <Route path='/orders' element={<Orders />}></Route>
-          <Route path='/adminhome' element={<AdminAuth><AdminHome /></AdminAuth>}></Route>
+          
           <Route path='/changepw' element={<ChangePW />}></Route>
           <Route path='/viewappointment' element={<AdminAuth><ViewAppointment /></AdminAuth>}></Route>
-          <Route path='/vieworders' element={<AdminAuth><ViewOrders /></AdminAuth>}></Route>
-          <Route path='/neworders' element={<AdminAuth><NewOrders /></AdminAuth>}></Route>
-          <Route path='/viewsupplier' element={<AdminAuth><ViewSupplier /></AdminAuth>}></Route>
-          <Route path='/viewcustomer' element={<AdminAuth><ViewCustomer /></AdminAuth>}></Route>
-          <Route path='/viewstaff' element={<AdminAuth><ViewStaff /></AdminAuth>}></Route>
-          <Route path='/suppayment' element={<AdminAuth><SupPayment /></AdminAuth>}></Route>
+
+
+        
+   
           <Route path='/ocalendar' element={<OCalendar />}></Route>
-          <Route path='/production' element={<AdminAuth><Production /></AdminAuth>}></Route>
-          <Route path='/rawmaterial' element={<AdminAuth><RawMaterial /></AdminAuth>}></Route>
-          <Route path='/product' element={<AdminAuth><Product /></AdminAuth>}></Route>  
-          <Route path='/material' element={<AdminAuth><Material /></AdminAuth>}></Route>
+
           <Route path='/empviewsupplier' element={<EmpViewSupplier />}></Route>
           <Route path='/empviewappoi' element={<EmpViewAppoi />}></Route>
           <Route path='/empproduction' element={<EmpProduction />}></Route>
@@ -94,7 +132,7 @@ function App() {
           <Route path='/ftest' element={<FTest />}></Route>
           <Route path='/newsupplier' element={<AdminAuth><AddSupplier /></AdminAuth>}></Route>
           <Route path='/productcart' element={<ProductCart />}></Route>
-          <Route path='/pricerange' element={<AdminAuth><PriceRange /></AdminAuth>}></Route>
+    
         </Routes>
       </BrowserRouter>
     </div>

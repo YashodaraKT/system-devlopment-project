@@ -74,10 +74,11 @@ function SupplierRegistrationPage() {
   const checkUserNameExists = async (userName) => {
     try {
       const response = await axios.get(`http://localhost:8081/user?UserName=${userName}`);
+      
       return response.data.exists;
     } catch (error) {
       console.error('Error checking username:', error);
-      return true; // Assume the username exists if there's an error checking
+      return false; // Assume the username exists if there's an error checking
     }
   };
 

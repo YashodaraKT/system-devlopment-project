@@ -88,7 +88,7 @@ function BasicExample() {
                 {showAppointments && (
                   <>
                     <Nav.Link href="/acappointment" style={dropdownItemStyle}>Oneday Change</Nav.Link>
-                    <Nav.Link href="/emprawmaterial" style={dropdownItemStyle}>Permenant Change</Nav.Link>
+                    <Nav.Link href="/ftest" style={dropdownItemStyle}>Permenant Change</Nav.Link>
                   </>
                 )}
 

@@ -133,6 +133,27 @@ app.get('/location', (req, res) => {
       }
     });
   });
+
+  //******************** */
+
+  app.get('/user', (req, res) => {
+    const userName = req.query.UserName;
+    if (!userName) {
+      return res.status(400).json({ error: 'UserName query parameter is required' });
+    }
+  
+    const query = 'SELECT COUNT(*) AS count FROM user WHERE User_Name = ?';
+    db.query(query, [userName], (err, result) => {
+      if (err) {
+        console.error('Error checking username:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      const userExists = result[0].count > 0;
+      res.json({ exists: userExists });
+    });
+  });
+
+
 //----------------------------Register
 
 app.post('/user', async (req, res) => {
@@ -741,12 +762,18 @@ app.get('/viewsupplier', (req, res) => {
 
 app.put('/updatesupplier/:id', (req, res) => {
   const { id } = req.params;
-  const { Contact_Number, Transport } = req.body;
-  const sql = 'UPDATE supplier SET Contact_Number = ?, Transport = ? WHERE Supplier_ID = ?';
-  db.query(sql, [Contact_Number, Transport, id], (err, result) => {
+  const { Name, Address1, Address2, Contact_Number, Transport } = req.body;
+  
+  // Prepare the SQL query with placeholders for all fields
+  const sql = 'UPDATE supplier SET Name = ?, Address1 = ?, Address2 = ?, Contact_Number = ?, Transport = ? WHERE Supplier_ID = ?';
+  
+  // Execute the query with the updated values
+  db.query(sql, [Name, Address1, Address2, Contact_Number, Transport, id], (err, result) => {
     if (err) {
+      console.error("Error updating supplier:", err);
       res.status(500).send(err);
     } else {
+      console.log("Supplier updated successfully");
       res.send({ success: true });
     }
   });
@@ -1450,16 +1477,84 @@ app.get('/api/inventory', (req, res) => {
     res.json(results);
   }); 
 });
-
-app.get('/api/production', (req, res) => {
-  const query = 'SELECT Product_ID, SUM(Quantity) AS TotalQuantity FROM production GROUP BY Product_ID'; // Adjust the table/column names as needed
+//**************************************** */
+app.get('/api/p_appointments', (req, res) => {
+  const query = `
+    SELECT 
+      a.Appointment_ID, 
+      s.Name AS Supplier_Name, 
+      s.Address1,
+      s.Address2,
+      s.Contact_Number,
+      l.Location_Name, 
+      a.Begin_Date, 
+      a.Reason
+      
+    FROM 
+      p_appointment a
+      JOIN supplier s ON a.Supplier_ID = s.Supplier_ID
+      JOIN location l ON s.Location_Id = l.Location_Id
+  `;
+  
   db.query(query, (err, results) => {
+    console.log("results")
     if (err) {
+      console.error('Error executing query:', err);
       return res.status(500).send(err);
     }
     res.json(results);
   });
 });
+//************************* */
+app.get('/api/per_appointments', (req, res) => {
+  const query = `
+    SELECT 
+      a.Appointment_ID, 
+      s.Name AS Supplier_Name, 
+      s.Address1,
+      s.Address2,
+      a.Approval,
+      s.Contact_Number,
+      l.Location_Name, 
+      a.Begin_Date, 
+      a.Reason
+      
+    FROM 
+      p_appointment a
+      JOIN supplier s ON a.Supplier_ID = s.Supplier_ID
+      JOIN location l ON s.Location_Id = l.Location_Id
+  `;
+  
+  db.query(query, (err, results) => {
+    console.log("results")
+    if (err) {
+      console.error('Error executing query:', err);
+      return res.status(500).send(err);
+    }
+    res.json(results);
+  });
+});
+
+
+
+//******************************************* */
+app.put('/api/p_appointments/:id', (req, res) => {
+  const appointmentId = req.params.id;
+  const { approval } = req.body;
+
+  const approvalValue = approval ? 1 : 0; // Convert boolean to 1 or 0
+
+  const query = 'UPDATE p_appointment SET Approval = ? WHERE Appointment_ID = ?';
+  db.query(query, [approvalValue, appointmentId], (err, result) => {
+    if (err) {
+      console.error('Error updating appointment approval:', err);
+      return res.status(500).send(err);
+    }
+    console.log(`Appointment ${appointmentId} approval updated to ${approvalValue}`);
+    res.send(`Appointment ${appointmentId} approval updated to ${approvalValue}`);
+  });
+});
+
 
 //******************************* */
 app.get('/api/order_items', (req, res) => {
@@ -1486,23 +1581,82 @@ app.get('/api/order_items', (req, res) => {
 app.get('/api/process_products', (req, res) => {
   const query = `
     SELECT 
-      p.Product_ID,
-      p.Product_Name,
-      p.In_Stock,
-      SUM(oi.Quantity) as Total_Quantity_Ordered
-    FROM product p
-    LEFT JOIN order_item oi ON p.Product_ID = oi.Product_ID
-    LEFT JOIN customer_order co ON oi.Order_ID = co.Order_ID
-    WHERE co.Process = 'Yes' AND co.Approval = 10
-    GROUP BY p.Product_ID, p.Product_Name, p.In_Stock;
+  p.Product_ID,
+  p.Product_Name,
+  p.In_Stock,
+  COALESCE(SUM(oi.Quantity), 0) as Total_Quantity_Ordered
+FROM product p
+LEFT JOIN order_item oi ON p.Product_ID = oi.Product_ID
+LEFT JOIN customer_order co ON oi.Order_ID = co.Order_ID
+WHERE co.Process = 'Yes' AND co.Approval = 10
+GROUP BY p.Product_ID, p.Product_Name, p.In_Stock;
   `;
 
-  connection.query(query, (error, results) => {
+  // Using db.query to execute SQL query
+  db.query(query, (error, results) => {
     if (error) {
-      res.status(500).send(error);
+      console.error('Error executing query:', error);
+      res.status(500).send('Database error');
       return;
     }
     res.json(results);
+  });
+});
+
+//***************** */
+app.get('/api/p_appointments', async (req, res) => {
+  try {
+      const appointments = await fetchAppointmentsFromDatabase(); // Implement this function
+      res.json(appointments);
+  } catch (error) {
+      console.error('Error fetching appointments:', error);
+      res.status(500).json({ error: 'Failed to fetch appointments' });
+  }
+});
+//************************* */
+app.get('/counts', (req, res) => {
+  const customerQuery = 'SELECT COUNT(*) AS count FROM customer';
+  const supplierQuery = 'SELECT COUNT(*) AS count FROM supplier';
+
+  db.query(customerQuery, (err, customerResults) => {
+    if (err) {
+      console.error('Error executing customer query:', err);
+      res.status(500).send('Error retrieving customer count');
+      return;
+    }
+
+    db.query(supplierQuery, (err, supplierResults) => {
+      if (err) {
+        console.error('Error executing supplier query:', err);
+        res.status(500).send('Error retrieving supplier count');
+        return;
+      }
+
+      res.json({
+        customerCount: customerResults[0].count,
+        supplierCount: supplierResults[0].count
+      });
+    });
+  });
+});
+
+//*************** */
+
+app.get('/suppliers_by_location', (req, res) => {
+  const query = `
+    SELECT Location_ID,Location_Name COUNT(*) AS count
+    FROM supplier S
+    Inner Join location  l.Location_ID= s.Location_ID
+    GROUP BY Location_Name
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching suppliers by Location:', err);
+      res.status(500).json({ error: 'Failed to fetch data' });
+    } else {
+      res.json(results);
+    }
   });
 });
 //-------------------------------------------

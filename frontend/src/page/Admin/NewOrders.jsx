@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Form } from "react-bootstrap";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Paper,
+} from "@mui/material";
 import axios from "axios";
 import moment from "moment";
 import AdminBar from '../../component/AdminBar';
@@ -132,66 +143,71 @@ function NewOrders() {
             <h1>Customer Orders</h1>
           </div>
           <div style={{ marginLeft: "50px", padding: "20px", width: "fit-content" }}>
-            <Table striped bordered hover>
-              <thead>
-                <tr>
-                  <th>Order No</th>
-                  <th>Customer ID</th>
-                  <th>Customer Name</th>
-                  <th>Contact Number</th>
-                  <th>Product Details</th>
-                  <th>Order Date</th>
-                  <th>Deliver Date</th>
-                  <th>Status</th>
-                  <th>Process</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((customer_order) => (
-                  <tr key={customer_order.Order_ID}>
-                    <td>{customer_order.Order_ID}</td>
-                    <td>{customer_order.Customer_ID}</td>
-                    <td>{customer_order.Name}</td>
-                    <td>{customer_order.Contact_Number}</td>
-                    <td>
-                      {customer_order["Product Details"].split(",\n").map((item, idx) => (
-                        <div key={idx}>{item}</div>
-                      ))}
-                    </td>
-                    <td>{moment(customer_order.Order_Date).format("MM/DD/YYYY")}</td>
-                    <td>{moment(customer_order.Deliver_Date).format("MM/DD/YYYY")}</td>
-                    <td>
-                      <Form.Check
-                        type="checkbox"
-                        label="Accept"
-                        checked={selectedOrders.some((order) => order.orderId === customer_order.Order_ID && order.isApproved)}
-                        onChange={() => handleSelectOrder(customer_order.Order_ID, true)}
-                      />
-                      <Form.Check
-                        type="checkbox"
-                        label="Decline"
-                        checked={selectedOrders.some((order) => order.orderId === customer_order.Order_ID && !order.isApproved)}
-                        onChange={() => handleSelectOrder(customer_order.Order_ID, false)}
-                      />
-                    </td>
-                    <td>
-  <input
-    type="checkbox"
-    checked={customer_order.Process === 'YES'}
-    disabled={customer_order.Process === 'YES'}
-    onChange={() => handleSelectProcess(customer_order.Order_ID)}
-  />
-</td>
-
-
-                    <td>
-                      <Button onClick={handleSubmit}>Submit</Button>
-                      </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order No</TableCell>
+                    <TableCell>Customer ID</TableCell>
+                    <TableCell>Customer Name</TableCell>
+                    <TableCell>Contact Number</TableCell>
+                    <TableCell>Product Details</TableCell>
+                    <TableCell>Order Date</TableCell>
+                    <TableCell>Deliver Date</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Process</TableCell>
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {orders.map((customer_order) => (
+                    <TableRow key={customer_order.Order_ID}>
+                      <TableCell>{customer_order.Order_ID}</TableCell>
+                      <TableCell>{customer_order.Customer_ID}</TableCell>
+                      <TableCell>{customer_order.Name}</TableCell>
+                      <TableCell>{customer_order.Contact_Number}</TableCell>
+                      <TableCell>
+                        {customer_order["Product Details"].split(",\n").map((item, idx) => (
+                          <div key={idx}>{item}</div>
+                        ))}
+                      </TableCell>
+                      <TableCell>{moment(customer_order.Order_Date).format("MM/DD/YYYY")}</TableCell>
+                      <TableCell>{moment(customer_order.Deliver_Date).format("MM/DD/YYYY")}</TableCell>
+                      <TableCell>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={selectedOrders.some((order) => order.orderId === customer_order.Order_ID && order.isApproved)}
+                              onChange={() => handleSelectOrder(customer_order.Order_ID, true)}
+                            />
+                          }
+                          label="Accept"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={selectedOrders.some((order) => order.orderId === customer_order.Order_ID && !order.isApproved)}
+                              onChange={() => handleSelectOrder(customer_order.Order_ID, false)}
+                            />
+                          }
+                          label="Decline"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Checkbox
+                          checked={customer_order.Process === 'YES'}
+                          disabled={customer_order.Process === 'YES'}
+                          onChange={() => handleSelectProcess(customer_order.Order_ID)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button onClick={handleSubmit}>Submit</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </div>
         </div>
       </div>
@@ -200,4 +216,3 @@ function NewOrders() {
 }
 
 export default NewOrders;
-

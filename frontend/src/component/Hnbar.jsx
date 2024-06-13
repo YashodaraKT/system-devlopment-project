@@ -1,21 +1,27 @@
 import React from 'react';
-import Container from 'react-bootstrap/Container';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
-import NImage from '../assets/nn.jpg';
-import { FaSearch } from 'react-icons/fa'; // Import the search icon from react-icons library
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
+import SearchIcon from '@mui/icons-material/Search';
+import NImage from '../assets/nn.jpg'; // Ensure this path is correct
 
 function Hnbar() {
   const navbarStyle = {
     backgroundColor: '#CCCCCC',
-    fontSize: '35px', 
-    color: 'white'
+    fontSize: '15px',
+    color: 'white',
   };
 
   const navLinkStyle = {
     color: 'black',
-    fontSize: '20px',
-    fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif'
+    fontSize: '16px',
+    fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif',
+    textDecoration: 'none',
+    margin: '0 10px'
   };
 
   return (
@@ -23,22 +29,29 @@ function Hnbar() {
       <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
         <img src={NImage} alt="Your Image" style={{ height: '125px', width: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', top: '0', right: '0', padding: '10px', display: 'flex', alignItems: 'center' }}>
-          <FaSearch style={{ marginRight: '5px', color: 'white' }} /> {/* Render the search icon with white color */}
-          <input type="text" placeholder="Search..." style={{ padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }} />
+          <IconButton aria-label="search" style={{ color: 'white' }}>
+            <SearchIcon />
+          </IconButton>
+          <TextField
+            placeholder="Search..."
+            variant="outlined"
+            size="small"
+            style={{ backgroundColor: 'white', borderRadius: '5px', marginLeft: '5px' }}
+          />
         </div>
       </div>
-      <Navbar style={navbarStyle} variant="dark">
-        <Container>
-          <Navbar.Brand style={navbarStyle}>Omega</Navbar.Brand>
-          <Nav className="me-auto">
-          <Nav.Link style={navLinkStyle} href="/">Home</Nav.Link>
-          <Nav.Link style={navLinkStyle} href="productcart">Our Products</Nav.Link>
-          </Nav>
-          <Nav>
-            <Nav.Link style={navLinkStyle} href="login">Login</Nav.Link>
-          </Nav>
-        </Container>
-      </Navbar>
+      <AppBar position="static" style={navbarStyle}>
+        <Toolbar>
+          <Typography variant="h6" component="div">
+            Omega
+          </Typography>
+          <Box sx={{ flexGrow: 1 }}>
+            <Button href="/" style={navLinkStyle}>Home</Button>
+            <Button href="/productcart" style={navLinkStyle}>Our Products</Button>
+          </Box>
+          <Button href="/login" style={navLinkStyle}>Login</Button>
+        </Toolbar>
+      </AppBar>
     </div>
   );
 }

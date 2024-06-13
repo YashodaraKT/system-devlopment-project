@@ -3,6 +3,9 @@ import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import axios from 'axios';
 
 function UpdateSupplierModal({ show, onHide, supplier, fetchSuppliers }) {
+  const [name, setName] = useState('');
+  const [address1, setAddress1] = useState('');
+  const [address2, setAddress2] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [transport, setTransport] = useState(0);
   const [error, setError] = useState(null);
@@ -10,6 +13,9 @@ function UpdateSupplierModal({ show, onHide, supplier, fetchSuppliers }) {
   useEffect(() => {
     // Initialize state with supplier data when modal is shown
     if (supplier) {
+      setName(supplier.Name);
+      setAddress1(supplier.Address1);
+      setAddress2(supplier.Address2);
       setContactNumber(supplier.Contact_Number);
       setTransport(supplier.Transport);
     }
@@ -28,6 +34,9 @@ function UpdateSupplierModal({ show, onHide, supplier, fetchSuppliers }) {
 
     try {
       await axios.put(`http://localhost:8081/updatesupplier/${supplier.Supplier_ID}`, {
+        Name: name,
+        Address1: address1,
+        Address2: address2,
         Contact_Number: contactNumber,
         Transport: transport,
       });
@@ -54,6 +63,30 @@ function UpdateSupplierModal({ show, onHide, supplier, fetchSuppliers }) {
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
         <Form>
+          <Form.Group controlId="formName">
+            <Form.Label>Name</Form.Label>
+            <Form.Control
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formAddress1">
+            <Form.Label>Address 1</Form.Label>
+            <Form.Control
+              type="text"
+              value={address1}
+              onChange={(e) => setAddress1(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="formAddress2">
+            <Form.Label>Address 2</Form.Label>
+            <Form.Control
+              type="text"
+              value={address2}
+              onChange={(e) => setAddress2(e.target.value)}
+            />
+          </Form.Group>
           <Form.Group controlId="formContactNumber">
             <Form.Label>Contact Number</Form.Label>
             <Form.Control

@@ -1,17 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const PieChart = () => {
   const chartContainer = useRef(null); // Reference to the chart canvas
   const [chartInstance, setChartInstance] = useState(null); // State to hold the chart instance
+  const [startDate, setStartDate] = useState(new Date()); // State for start date
+  const [endDate, setEndDate] = useState(new Date()); // State for end date
 
   useEffect(() => {
     let newChartInstance = null;
 
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:8081/api/order_items');
+        const response = await axios.get(`http://localhost:8081/api/order_items?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`);
         const data = response.data;
 
         // Prepare data for Chart.js
@@ -78,17 +82,21 @@ const PieChart = () => {
 
     fetchData();
 
-    // Cleanup on component unmount
+    // Cleanup on component unmount and before next effect run
     return () => {
-      // Destroy the chart instance when component unmounts
+      // Destroy the chart instance when component unmounts or before next effect run
       if (newChartInstance) {
         newChartInstance.destroy();
       }
     };
-  }, []); // Empty dependency array ensures useEffect runs once on component mount
+  }, [startDate, endDate]); // Include startDate and endDate in dependency array to fetch data when they change
 
   return (
-    <div style={{ width: '350px', height: '350px' }}>
+    <div style={{ width: '350px', height: '400px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <DatePicker selected={startDate} onChange={date => setStartDate(date)} selectsStart startDate={startDate} endDate={endDate} />
+        <DatePicker selected={endDate} onChange={date => setEndDate(date)} selectsEnd startDate={startDate} endDate={endDate} minDate={startDate} />
+      </div>
       <canvas ref={chartContainer} id="myPieChart"></canvas>
     </div>
   );

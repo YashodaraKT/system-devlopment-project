@@ -57,16 +57,12 @@ function Desc() {
               <Accordion.Header>If you are a customer,</Accordion.Header>
               <Accordion.Body style={{ textAlign: 'justify' }}>
               <ul style={{ listStyleType: 'none' }}>
-                <li> <img src={image4} alt="Image 4" style={{ width: '125px', height: '125px' }}/>
-                  Modify scheduled orders at the beginning of month.</li>
                 <li><img src={image5} alt="Image 5" style={{ width: '125px', height: '125px' }}/>
-                  Have the option to place additional orders.</li>
+                  Have the option to place orders.</li>
                 <li><img src={image6} alt="Image 6" style={{ width: '125px', height: '125px' }}/>
                   View current month payments.</li>
                 <li><img src={image7} alt="Image 7" style={{ width: '125px', height: '125px' }}/>
-                  Review payment history and search by date range.</li>
-                <li><img src={image8} alt="Image 8" style={{ width: '125px', height: '125px' }}/>
-                  Receive reminders for pending payments before 5 days.</li>
+                  Review payment history and search by month range.</li>
               </ul>
               </Accordion.Body>
             </Accordion.Item>

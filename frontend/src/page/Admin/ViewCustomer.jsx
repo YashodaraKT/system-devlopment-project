@@ -44,6 +44,7 @@ function ViewCustomer() {
             <tr>
               <th>ID</th>
               <th>Name</th>
+              <th>NIC</th>
               <th>Contact Number</th>
               <th>Address</th>
               <th>Email</th>
@@ -55,6 +56,7 @@ function ViewCustomer() {
               <tr key={customer.Customer_ID}>
                 <td>{customer.Customer_ID}</td>
                 <td>{customer.Name}</td>
+                <td>{customer.NIC}</td>
                 <td>{customer.Contact_Number}</td>
                 <td>{`${customer.Address1}, ${customer.Address2}`}</td>
                 <td>{customer.Email}</td>

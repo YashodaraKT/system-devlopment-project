@@ -3,6 +3,8 @@ import ProfileBar from '../../component/ProfileBar';
 import AdminBar from '../../component/AdminBar';
 import PieChart from '../../component/PieChart';
 import Process from '../../component/Process';
+import Dash from '../../component/Dash';
+import SupplierBranch from '../../component/SupplierBranch';
 
 function AdminHome() {
   return (
@@ -18,8 +20,18 @@ function AdminHome() {
             <PieChart />
           </div>
           <div style={{ width: '350px', height: '350px' }}>
-            <h2>Sales</h2>
+          
             <Process />
+          </div>
+          <br/>
+        
+          <div style={{ width: '350px', height: '350px' }}>
+            
+            <Dash />
+          </div>
+          <div style={{ width: '350px', height: '350px' }}>
+            
+            <SupplierBranch />
           </div>
         </div>
       </div>

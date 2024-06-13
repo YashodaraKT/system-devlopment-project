@@ -2,7 +2,7 @@ import React from 'react';
 import Chome from '../component/Chome';
 import Hnbar from '../component/Hnbar';
 import Desc from '../component/Desc';
-import Footer from '../component/Footer';
+import Foter from '../component/Foter';
 
 
 function Home() {
@@ -22,7 +22,7 @@ function Home() {
         <div><Desc /></div>
         <br />
         <br />
-        <div><Footer /></div>
+        <div><Foter /></div>
       </div>
     </>
   );
