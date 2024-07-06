@@ -5,6 +5,8 @@ import moment from 'moment';
 import { jsPDF } from 'jspdf';
 import AdminBar from '../../component/AdminBar';
 import ProfileBar from '../../component/ProfileBar';
+import headerImg from '../../assets/Bill.png';
+
 
 function ViewOrders() {
   const [orders, setOrders] = useState([]);
@@ -46,39 +48,69 @@ function ViewOrders() {
   const generateBill = (order) => {
     const doc = new jsPDF();
 
+    // Add header image
+   
+    doc.addImage(headerImg, 'PNG', 10, 10, 140, 60);
+
     // Adding title
     doc.setFontSize(18);
-    doc.text('Invoice', 105, 20, null, null, 'center');
+    doc.text('Invoice', 105, 70, null, null, 'center');
 
-    // Adding customer details
+    // Adding customer details with border
     doc.setFontSize(12);
-    doc.text(`Order No: ${order.Order_ID}`, 10, 30);
-    doc.text(`Customer ID: ${order.Customer_ID}`, 10, 40);
-    doc.text(`Customer Name: ${order.Name}`, 10, 50);
-    doc.text(`Contact Number: ${order.Contact_Number}`, 10, 60);
-    doc.text(`Order Date: ${moment(order.Order_Date).format('MM/DD/YYYY')}`, 10, 70);
-    doc.text(`Deliver Date: ${moment(order.Deliver_Date).format('MM/DD/YYYY')}`, 10, 80);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Customer Details', 10, 60);
+    doc.setFont('helvetica', 'normal');
 
-    // Adding product details
-    let yPosition = 90;
-    doc.text('Product Details:', 10, yPosition);
+    doc.setDrawColor(0, 0, 0);
+    doc.rect(10, 65, 190, 30); // Border for customer details
+
+    doc.text(`Order No: ${order.Order_ID}`, 12,90);
+    doc.text(`Customer ID: ${order.Customer_ID}`, 12, 100);
+    doc.text(`Customer Name: ${order.Name}`, 12, 110);
+    doc.text(`Contact Number: ${order.Contact_Number}`, 12, 120);
+
+    doc.text(`Order Date: ${moment(order.Order_Date).format('MM/DD/YYYY')}`, 150, 72);
+    doc.text(`Deliver Date: ${moment(order.Deliver_Date).format('MM/DD/YYYY')}`, 150, 80);
+
+    // Adding product details with border
+    let yPosition = 110;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Product Details', 10, yPosition);
+
+    yPosition += 5;
+    doc.setDrawColor(0, 0, 0);
+    doc.rect(10, yPosition, 190, 8); // Header border for product details
+    doc.text('Product', 12, yPosition + 6);
+    doc.text('Quantity (kg)', 100, yPosition + 6);
+    doc.text('Value (LKR)', 150, yPosition + 6);
+
     yPosition += 10;
-
+    doc.setFont('helvetica', 'normal');
     order['Product Details'].split(',\n').forEach((item) => {
       const [name, qty, value] = item.split(' - ');
-      doc.text(`Product: ${name}`, 10, yPosition);
-      doc.text(`Quantity: ${qty} kg`, 100, yPosition);
-      doc.text(`Value: ${value} LKR`, 150, yPosition);
+      doc.rect(10, yPosition, 190, 8); // Border for each product detail row
+      doc.text(name, 12, yPosition + 6);
+      doc.text(qty, 100, yPosition + 6);
+      doc.text(value, 150, yPosition + 6);
       yPosition += 10;
     });
 
-    // Adding total payment
-    yPosition += 10;
-    doc.text(`Total Payment: ${order.Payment} LKR`, 10, yPosition);
+    // Adding total payment with border
+    yPosition += 5;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.rect(10, yPosition, 190, 10); // Border for total payment
+    doc.text(`Total Payment: ${order.Payment} LKR`, 12, yPosition + 7);
+
+    // Add footer image
+    
 
     // Save the PDF
     doc.save(`Bill_Order_${order.Order_ID}.pdf`);
-  };
+};
+
 
   return (
     <div>

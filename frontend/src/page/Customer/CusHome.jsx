@@ -6,7 +6,7 @@ import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CustomerBar from '../../component/CustomerBar';
-import Footer from '../../component/Footer';
+import Foter from '../../component/Foter';
 
 function ProductChart() {
   const [products, setProducts] = useState([]);
@@ -58,7 +58,7 @@ function ProductChart() {
           );
         })}
       </div>
-      <div><Footer/></div>
+      <div><Foter/></div>
     </div>
   );
 }

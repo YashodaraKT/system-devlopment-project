@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Container, Grid, TextField, Card, CardContent } from '@mui/material';
 import axios from 'axios';
 import '../css/ChangePW.css';
-import Footer from '../component/Footer';
+import Foter from '../component/Foter';
 
 const ChangePW = () => {
   const [username, setUsername] = useState('');
@@ -94,7 +94,7 @@ const ChangePW = () => {
 
       <br />
       <br />
-      <div><Footer /></div>
+      <div><Foter /></div>
     </div>
   );
 };

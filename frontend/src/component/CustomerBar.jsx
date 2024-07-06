@@ -1,13 +1,26 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import NavDropdown from 'react-bootstrap/NavDropdown';
 import BImage from '../assets/nn.jpg';
-import { FaSearch, FaShoppingCart, FaCalendarAlt, FaMoneyBill, FaCog, FaLock, FaSignOutAlt } from 'react-icons/fa';
-
+import { FaSearch, FaShoppingCart, FaCalendarAlt, FaMoneyBill, FaSignOutAlt, FaLock } from 'react-icons/fa';
 
 function Hnbar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear user details from local storage
+    localStorage.removeItem('user');
+    // Redirect to login page
+    navigate('/login');
+  };
+
+  const handleChangePassword = () => {
+    // Redirect to change password page
+    navigate('/changepw');
+  };
+
   return (
     <div>
       <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
@@ -50,10 +63,24 @@ function Hnbar() {
             </Nav.Link>
           </Nav>
           <Nav>
-            <NavDropdown title={<span><FaCog style={{ marginRight: '5px' }} />Settings</span>} id="basic-nav-dropdown" align="end">
-              <NavDropdown.Item href="/changepw"><FaLock style={{ marginRight: '5px' }} />Change Password</NavDropdown.Item>
-              <NavDropdown.Item href="#action/3.2"><FaSignOutAlt style={{ marginRight: '5px' }} />Logout</NavDropdown.Item>
-            </NavDropdown>
+            <Nav.Link
+              onClick={handleChangePassword}
+              style={{ fontSize: '1.2rem', color: '#000', transition: 'transform 0.3s', marginLeft: '20px', cursor: 'pointer' }}
+              onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
+              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              <FaLock style={{ marginRight: '5px' }} />
+              Change Password
+            </Nav.Link>
+            <Nav.Link
+              onClick={handleLogout}
+              style={{ fontSize: '1.2rem', color: '#000', transition: 'transform 0.3s', marginLeft: '20px', cursor: 'pointer' }}
+              onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
+              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              <FaSignOutAlt style={{ marginRight: '5px' }} />
+              Logout
+            </Nav.Link>
           </Nav>
         </Container>
       </Navbar>

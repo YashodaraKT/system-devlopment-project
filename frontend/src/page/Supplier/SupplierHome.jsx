@@ -3,7 +3,7 @@ import {Button, Container,Card,Row,Col} from 'react-bootstrap';
 import h1Image from '../../assets/h1.png'; 
 import SupplierNBar from '../../component/SupplierNBar';
 import { useNavigate } from 'react-router-dom';
-import Footer from '../../component/Footer';
+import Foter from '../../component/Foter';
 
 
 function SupplierHome() {
@@ -22,11 +22,24 @@ function SupplierHome() {
               <Card style={{ width: '18rem',border: '2px solid black'  }}>
                 <Card.Img variant="top" src={h1Image} />
                 <Card.Body>
-                  <Card.Title>Transport</Card.Title>
+                  <Card.Title>Transport(Permanantly)</Card.Title>
                   <Card.Text>
                   Easily schedule appointments for delivering your goods to the factory.
                   </Card.Text>
                   <Button onClick ={()=> Navigate("/transport")} variant="primary">View Details</Button>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col xs={6} md={4}>
+              <Card style={{ width: '18rem',border: '2px solid black'  }}>
+                <Card.Img variant="top" src={h1Image} />
+                <Card.Body>
+                  <Card.Title>Transport(oneday)</Card.Title>
+                  <Card.Text>
+                  Easily schedule appointments for delivering your goods to the factory.
+                  </Card.Text>
+                  <Button onClick ={()=> Navigate("/onedayt")} variant="primary">View Details</Button>
                 </Card.Body>
               </Card>
             </Col>
@@ -44,13 +57,17 @@ function SupplierHome() {
               </Card>
             </Col>
 
+
+
+
+
            
           </Row>
         </Container>
       </div>
       <br/>
       <br/>
-      <div><Footer /></div>
+      <div><Foter /></div>
     </>
     
   ); 

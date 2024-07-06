@@ -1,27 +1,26 @@
 import React from 'react';
+import { Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
 
 function ProductInv({ productionData = [] }) {
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Product Name</th>
-          <th>Production Quantity</th>
-          <th>Order Item Quantity</th>
-          <th>Total Quantity</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>Product Name</TableCell>
+          <TableCell>Total Quantity(kg)</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
         {productionData.map((row) => (
-          <tr key={row.productId}>
-            <td>{row.productName}</td>
-            <td>{row.productionQuantity}</td>
-            <td>{row.orderItemQuantity}</td>
-            <td>{row.totalQuantity}</td>
-          </tr>
+          <TableRow key={row.productId}>
+            <TableCell>{row.productName}</TableCell>
+            <TableCell>
+              {row.totalQuantity === 0 ? 'Out of Stock' : `${row.totalQuantity} kg`}
+            </TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }
 

@@ -1,10 +1,12 @@
+// SupplierRegistrationForm.js
+
 import React, { useState, useEffect } from 'react';
-import { Button, Container, TextField, FormControl, InputLabel, Select, MenuItem, Grid } from '@mui/material';
 import axios from 'axios';
-import { toast, ToastContainer } from 'react-toastify';
+import { Button, Container, TextField, FormControl, InputLabel, Select, MenuItem, Grid } from '@mui/material';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-function SupplierRegistrationPage() {
+const SupplierRegistrationForm = ({ show, onHide, fetchSuppliers }) => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -12,24 +14,24 @@ function SupplierRegistrationPage() {
   const [address2, setAddress2] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [transport, setTransport] = useState('');
-  const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState('');
+  const [locations, setLocations] = useState([]);
 
   useEffect(() => {
-    const fetchLocationData = async () => {
-      try {
-        const response = await axios.get('http://localhost:8081/location');
-        if (response.status >= 200 && response.status < 300) {
-          setLocations(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching locations:', error);
-        toast.error('Failed to fetch locations. Please try again later.');
-      }
-    };
-
     fetchLocationData();
   }, []);
+
+  const fetchLocationData = async () => {
+    try {
+      const response = await axios.get('http://localhost:8081/location');
+      if (response.status >= 200 && response.status < 300) {
+        setLocations(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+      toast.error('Failed to fetch locations. Please try again later.');
+    }
+  };
 
   const validateForm = () => {
     const nameRegex = /^[A-Za-z\s]{1,50}$/;
@@ -67,16 +69,6 @@ function SupplierRegistrationPage() {
     return true;
   };
 
-  const checkUserNameExists = async (userName) => {
-    try {
-      const response = await axios.get(`http://localhost:8081/user?UserName=${userName}`);
-      return response.data.exists;
-    } catch (error) {
-      console.error('Error checking username:', error);
-      return false; // Assume the username exists if there's an error checking
-    }
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -84,13 +76,8 @@ function SupplierRegistrationPage() {
       return;
     }
 
-    const userNameExists = await checkUserNameExists(userName);
-    if (userNameExists) {
-      toast.error("Username already exists. Please choose another.");
-      return;
-    }
-
     try {
+      // Example of how you might handle form submission
       const userResponse = await axios.post('http://localhost:8081/user', {
         User_Name: userName,
         User_Type: 'Supplier',
@@ -114,6 +101,8 @@ function SupplierRegistrationPage() {
         if (supplierResponse.status >= 200 && supplierResponse.status < 300) {
           toast.success("Supplier registered successfully!");
           clearForm();
+          fetchSuppliers(); // Refresh suppliers list
+          onHide(); // Close modal or perform any other necessary action
         } else {
           toast.error("Error registering supplier. Please try again.");
         }
@@ -130,9 +119,9 @@ function SupplierRegistrationPage() {
     setUserName('');
     setPassword('');
     setName('');
-    setContactNumber('');
     setAddress1('');
     setAddress2('');
+    setContactNumber('');
     setTransport('');
     setSelectedLocation('');
   };
@@ -246,9 +235,8 @@ function SupplierRegistrationPage() {
           </Grid>
         </Grid>
       </form>
-      <ToastContainer />
     </Container>
   );
-}
+};
 
-export default SupplierRegistrationPage;
+export default SupplierRegistrationForm;

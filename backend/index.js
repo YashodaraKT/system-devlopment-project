@@ -233,7 +233,7 @@ app.post('/staff', async (req, res) => {
     res.status(201).send("Staff member registered successfully");
   } catch (err) {
     console.error('Error registering Staff member:', err);
-    res.status(500).send('Server error');
+    res.status(500).send('Server error'); 
   }
 });
 //--------------------------------------------------------------------------------------------------------
@@ -796,16 +796,18 @@ app.get('/viewcustomer', (req, res) => {
 // Add this to your existing Express app
 app.put('/updatecustomer/:id', (req, res) => {
   const { id } = req.params;
-  const { Contact_Number } = req.body;
-  const sql = 'UPDATE customer SET Contact_Number = ? WHERE Customer_ID = ?';
-  db.query(sql, [Contact_Number, id], (err, result) => {
+  const { Name, Address1, Address2, Email, Contact_Number } = req.body;
+  const sql = 'UPDATE customer SET Name = ?, Address1 = ?, Address2 = ?, Email = ?, Contact_Number = ? WHERE Customer_ID = ?';
+  db.query(sql, [Name, Address1, Address2, Email, Contact_Number, id], (err, result) => {
     if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send({ success: true });
+      console.error('Error updating customer:', err);
+      res.status(500).json({ error: 'Error updating customer' });
+      return;
     }
+    res.json({ success: true });
   });
 });
+
 
 
 
@@ -1173,9 +1175,11 @@ app.get('/getRawMaterialInventory', (req, res) => {
 
 //-----------------add or purchase RM
 app.post('/addRawMaterial', (req, res) => {
-  const { R_Name, Quantity, Date, Action,A_User_ID } = req.body;
+  const { R_Name, Quantity, Date, Action, A_User_ID } = req.body;
+  
+  // Step 1: Retrieve R_ID for the given R_Name
   const getRIdQuery = `
-    SELECT R_ID FROM rawmaterial WHERE R_Name = ?
+    SELECT R_ID, Stock FROM rawmaterial WHERE R_Name = ?
   `;
   
   db.query(getRIdQuery, [R_Name], (err, result) => {
@@ -1186,9 +1190,15 @@ app.post('/addRawMaterial', (req, res) => {
       if (result.length === 0) {
         return res.status(404).send('Raw material not found');
       }
-      const R_ID = result[0].R_ID;
+      
+      const { R_ID, Stock } = result[0];
+      
+      // Step 2: Check if stock is sufficient
+      if (Action === 0 && Stock - Quantity < 0) {
+        return res.status(400).send('Insufficient stock');
+      }
 
-    
+      // Step 3: Insert new record into rawmaterial_inv
       const insertQuery = `
         INSERT INTO rawmaterial_inv (R_ID, Quantity, Date, Action, A_User_ID)
         VALUES (?, ?, ?, ?, ?)
@@ -1206,6 +1216,7 @@ app.post('/addRawMaterial', (req, res) => {
     }
   });
 });
+
 
 //-----------RM dropdown
 app.get('/getRawMaterialNames', (req, res) => {
@@ -1249,6 +1260,7 @@ app.get('/getMaterials', (req, res) => {
     }
   });
 });
+
 
 //-------View Product Table
 app.get('/viewProducts', (req, res) => {
@@ -1639,14 +1651,26 @@ app.get('/counts', (req, res) => {
     });
   });
 });
+//********************* */
 
+app.put('/rawmaterials/:id', (req, res) => {
+  const { id } = req.params;
+  const { Buying_Price } = req.body;
+  const query = 'UPDATE rawmaterial SET Buying_Price = ? WHERE R_ID = ?';
+  db.query(query, [Buying_Price, id], (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.send(results);
+  });
+});
 //*************** */
 
 app.get('/suppliers_by_location', (req, res) => {
   const query = `
-    SELECT Location_ID,Location_Name COUNT(*) AS count
+    SELECT Location_Name, COUNT(*) AS count
     FROM supplier S
-    Inner Join location  l.Location_ID= s.Location_ID
+    INNER JOIN location L ON S.Location_ID = L.Location_ID
     GROUP BY Location_Name
   `;
 
@@ -1659,6 +1683,7 @@ app.get('/suppliers_by_location', (req, res) => {
     }
   });
 });
+
 //-------------------------------------------
 app.listen(8081,()=>{
     console.log ("listening...")

@@ -139,10 +139,10 @@ function NewOrders() {
       <div style={{ display: 'flex' }}>
         <div><AdminBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>
-          <div style={{ marginLeft: "50px", padding: "20px", width: "fit-content" }}>
-            <h1>Customer Orders</h1>
+          <div style={{ marginLeft: "20px", padding: "20px", width: "fit-content" }}>
+          
           </div>
-          <div style={{ marginLeft: "50px", padding: "20px", width: "fit-content" }}>
+          <div style={{ marginLeft: "20px", padding: "20px", width: "fit-content" }}>
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
@@ -151,7 +151,7 @@ function NewOrders() {
                     <TableCell>Customer ID</TableCell>
                     <TableCell>Customer Name</TableCell>
                     <TableCell>Contact Number</TableCell>
-                    <TableCell>Product Details</TableCell>
+                    <TableCell>Product Details(product-kg-Rs)</TableCell>
                     <TableCell>Order Date</TableCell>
                     <TableCell>Deliver Date</TableCell>
                     <TableCell>Status</TableCell>

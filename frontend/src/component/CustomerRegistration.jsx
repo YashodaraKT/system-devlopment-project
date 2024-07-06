@@ -150,7 +150,7 @@ function CustomerRegistration(props) {
                 <Container className="cus-register-form-container" ref={ref}>
                     <Form className="cus-register-form" onSubmit={handleSubmit}>
                         <Form.Group className="mb-3" id="formGridName">
-                            <Form.Label>Name</Form.Label>
+                            <Form.Label>Full Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 placeholder="Enter name with surname"
@@ -160,10 +160,10 @@ function CustomerRegistration(props) {
                         </Form.Group>
                         <Row className="mb-3">
                             <Form.Group as={Col} controlId="formGridUserName">
-                                <Form.Label>UserName</Form.Label>
+                                <Form.Label>Username</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    placeholder="Enter UserName"
+                                    placeholder="Enter username"
                                     value={userName}
                                     onChange={(e) => setUserName(e.target.value)}
                                 />
@@ -183,7 +183,7 @@ function CustomerRegistration(props) {
                                 <Form.Label>Contact Number</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    placeholder="Enter the contact number"
+                                    placeholder="Enter contact number"
                                     value={contactNumber}
                                     onChange={(e) => setContactNumber(e.target.value)}
                                 />
@@ -191,19 +191,19 @@ function CustomerRegistration(props) {
                         </Row>
                         <Row className="mb-3">
                             <Form.Group as={Col} controlId="formGridAddress1">
-                                <Form.Label>Village</Form.Label>
+                                <Form.Label>Address</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    placeholder="Wadduwa"
+                                    placeholder="Enter village"
                                     value={address1}
                                     onChange={(e) => setAddress1(e.target.value)}
                                 />
                             </Form.Group>
                             <Form.Group as={Col} controlId="formGridAddress2">
-                                <Form.Label>City</Form.Label>
+                                <Form.Label>Nearest Town</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    placeholder="Kalutara"
+                                    placeholder="Enter city"
                                     value={address2}
                                     onChange={(e) => setAddress2(e.target.value)}
                                 />
@@ -213,7 +213,7 @@ function CustomerRegistration(props) {
                             <Form.Label>Email</Form.Label>
                             <Form.Control
                                 type="email"
-                                placeholder="Enter the Email"
+                                placeholder="Enter email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
@@ -233,4 +233,3 @@ function CustomerRegistration(props) {
 }
 
 export default CustomerRegistration;
-

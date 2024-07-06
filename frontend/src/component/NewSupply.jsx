@@ -3,7 +3,7 @@ import { Modal, Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
 
-function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTransport, priceWithoutTransport }) {
+function NewSupplyForm({ show, handleClose, fetchSupplierPayments }) {
   const [newSupply, setNewSupply] = useState({
     Supplier_Name: '',
     Contact_Number: '',
@@ -14,6 +14,7 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
   });
   const [locations, setLocations] = useState([]);
   const [unitPrice, setUnitPrice] = useState(0);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     axios.get('http://localhost:8081/location')
@@ -26,7 +27,7 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
   }, []);
 
   useEffect(() => {
-    if (newSupply.Location_Id && newSupply.Transport) {
+    if (newSupply.Location_Id && newSupply.Transport && newSupply.Quantity) {
       const transportColumn = newSupply.Transport === '1' ? 'Price' : 'Price_WT';
       axios.get(`http://localhost:8081/location_price`, {
         params: {
@@ -35,8 +36,9 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
         }
       })
       .then(response => {
-        setUnitPrice(response.data.unitPrice);
-        setNewSupply(s => ({ ...s, Payment: response.data.unitPrice * s.Quantity }));
+        const price = response.data.unitPrice;
+        setUnitPrice(price);
+        setNewSupply(s => ({ ...s, Payment: price * s.Quantity }));
       })
       .catch(error => {
         console.error('Error fetching unit price:', error);
@@ -50,10 +52,32 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
       ...newSupply,
       [name]: value
     });
+    setErrors({
+      ...errors,
+      [name]: ''
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (newSupply.Supplier_Name.length > 50) {
+      newErrors.Supplier_Name = 'Supplier name must be 50 characters or less';
+    }
+    if (!/^0\d{9}$/.test(newSupply.Contact_Number)) {
+      newErrors.Contact_Number = 'Contact number must begin with 0 and be 10 digits long';
+    }
+    if (isNaN(newSupply.Quantity) || newSupply.Quantity <= 0) {
+      newErrors.Quantity = 'Quantity must be a positive number';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleAddSupply = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
     try {
       const userData = JSON.parse(localStorage.getItem('user'));
       const R_User_ID = userData ? userData.User_ID : null;
@@ -105,8 +129,12 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
               name="Supplier_Name"
               value={newSupply.Supplier_Name}
               onChange={handleInputChange}
+              isInvalid={!!errors.Supplier_Name}
               required
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.Supplier_Name}
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="Contact_Number">
             <Form.Label>Contact Number</Form.Label>
@@ -115,8 +143,12 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
               name="Contact_Number"
               value={newSupply.Contact_Number}
               onChange={handleInputChange}
+              isInvalid={!!errors.Contact_Number}
               required
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.Contact_Number}
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="Quantity">
             <Form.Label>Quantity</Form.Label>
@@ -125,8 +157,12 @@ function NewSupplyForm({ show, handleClose, fetchSupplierPayments, priceWithTran
               name="Quantity"
               value={newSupply.Quantity}
               onChange={handleInputChange}
+              isInvalid={!!errors.Quantity}
               required
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.Quantity}
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="Location_Id">
             <Form.Label>Location</Form.Label>

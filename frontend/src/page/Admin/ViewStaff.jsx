@@ -28,60 +28,62 @@ function ViewStaff() {
 
   return (
     <div>
-     <div><ProfileBar pageName="Staff" /></div>
+      <div><ProfileBar pageName="Staff" /></div>
       <div style={{ display: 'flex' }}>
         <div><AdminBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>
           <Container className="mt-5">
-        <h1>Registered staff members</h1>
-        <Button variant="primary" onClick={() => setModalShow(true)}>
-          Add Staff
-        </Button>
-        <br />
-        <br />
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Contact Number</th>
-              <th>Actions</th> {/* Add Actions column */}
-            </tr>
-          </thead>
-          <tbody>
-            {staffs.map((staff) => (
-              <tr key={staff.Staff_ID}>
-                <td>{staff.Staff_ID}</td>
-                <td>{staff.Name}</td>
-                <td>{staff.Contact_Number}</td>
-                <td>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleEditClick(staff)}
-                  >
-                    Edit
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-        <StaffRegistration
-          show={modalShow}
-          onHide={() => setModalShow(false)}
-        />
-        {selectedStaff && (
-          <UpdateStaff
-            show={editModalShow}
-            onHide={() => setEditModalShow(false)}
-            staffId={selectedStaff.Staff_ID}
-            currentContact={selectedStaff.Contact_Number}
-            fetchStaff={fetchStaff}
-          />
-        )}
-      </Container>
-    </div>
-    </div>
+            <h1>Registered staff members</h1>
+            <Button variant="primary" onClick={() => setModalShow(true)}>
+              Add Staff
+            </Button>
+            <br />
+            <br />
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Contact Number</th>
+                
+                  <th>Actions</th> {/* Add Actions column */}
+                </tr>
+              </thead>
+              <tbody>
+                {staffs.map((staff) => (
+                  <tr key={staff.Staff_ID}>
+                    <td>{staff.Staff_ID}</td>
+                    <td>{staff.Name}</td>
+                    <td>{staff.Contact_Number}</td>
+                 
+                    <td>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleEditClick(staff)}
+                      >
+                        Edit
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <StaffRegistration
+              show={modalShow}
+              onHide={() => setModalShow(false)}
+            />
+            {selectedStaff && (
+              <UpdateStaff
+                show={editModalShow}
+                onHide={() => setEditModalShow(false)}
+                staffId={selectedStaff.Staff_ID}
+                currentContact={selectedStaff.Contact_Number}
+                fetchStaff={fetchStaff}
+              />
+            )}
+          </Container>
+        </div>
+      </div>
     </div>
   );
 }

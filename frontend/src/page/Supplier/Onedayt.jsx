@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import ProfilenavBar from '../../component/ProfilenavBar';
+import SupplierNBar from '../../component/SupplierNBar';
 import PendingAppS from '../../component/PendingAppS';
 import FinalAppS from '../../component/FinalAppS';
-import { Button, TextField, FormControlLabel, Checkbox, Alert, Tabs, Tab, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent, DialogActions, Card, CardContent, CardActions } from '@mui/material';
+import { Button, TextField, FormControlLabel, Checkbox, Alert, Tabs, Tab, Box, Typography, Card, CardContent, CardActions } from '@mui/material';
 import moment from 'moment';
 
 function Transport() {
@@ -154,7 +154,7 @@ function Transport() {
 
   return (
     <div>
-      <ProfilenavBar userType="supplier" />
+      <SupplierNBar userType="supplier" />
 
       <Box sx={{ width: '100%', typography: 'body1', mt: 2 }}>
         <Tabs value={tabIndex} onChange={handleTabChange} sx={{ justifyContent: 'flex-start' }}>
@@ -164,10 +164,9 @@ function Transport() {
         </Tabs>
 
         {tabIndex === 0 && (
-          <Box sx={{ p: 3, display: 'flex', justifyContent: 'center' }}>
-            <Card variant="outlined" sx={{ width: '500px' }}>
+          <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+            <Card variant="outlined" sx={{ width: '60%' }}>
               <CardContent>
-
                 <form onSubmit={handleSubmit}>
                   <TextField
                     fullWidth
@@ -221,7 +220,7 @@ function Transport() {
                         color="primary"
                       />
                     }
-                    label="I agree with the price ranges"
+                    label={<span style={{ fontSize: '14px' }}>I agree with the price ranges</span>}
                   />
                   {errors.agreement && <Typography color="error">{errors.agreement}</Typography>}
                   <Button variant="contained" color="success" type="submit" fullWidth sx={{ mt: 2 }}>
@@ -230,30 +229,45 @@ function Transport() {
                 </form>
 
                 {successMessage && <Alert severity="success" sx={{ mt: 2 }}>{successMessage}</Alert>}
-
-                <Box sx={{ mt: 2 }}>
-                  <ul>
-                    <li>After confirming the transport, our drivers will contact you.</li>
-                    <li>Please ensure your supplies are prepared on time.</li>
-                    <li>Your payment will be reduced due to the transport costs.</li>
-                  </ul>
-                </Box>
+              </CardContent>
+            </Card>
+            <Card variant="outlined" sx={{ width: '35%' }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Dear valued supplier,
+                </Typography>
+                <Typography variant="body1" paragraph>
+                  If you have an order greater than 20kg, you can submit a new request.
+                </Typography>
+                <Typography variant="body1" paragraph>
+                  After confirming the transport, our drivers will contact you. Please ensure your supplies are prepared on time. Note that your payment will be reduced to account for the transport costs.
+                </Typography>
+                <Typography variant="body1">
+                  Only requests within the next 7 days are accepted.
+                </Typography>
+                <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+                  Thank you for your cooperation.
+                </Typography>
+                <Typography variant="body1">
+                  Manager,
+                  <br />
+                  Moro Farms
+                </Typography>
               </CardContent>
             </Card>
           </Box>
         )}
 
-{tabIndex === 1 && (
-  <div>
-    <PendingAppS/>
-  </div>
-)}
-{tabIndex === 2 && (
-  <div>
-    <FinalAppS/>
-  </div>
-)}
-
+        {tabIndex === 1 && (
+          <div>
+            <PendingAppS />
+          </div>
+        )}
+        {tabIndex === 2 && (
+          <div>
+            <FinalAppS />
+          </div>
+        )}
       </Box>
     </div>
   );

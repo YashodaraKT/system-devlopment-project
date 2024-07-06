@@ -138,9 +138,7 @@ function ViewSupplierPayments() {
               onChange={handleSearchQueryChange}
             />
           </Form.Group>
-            <Button variant="secondary" onClick={handleShowNewPopup} style={{ marginRight: '10px' }}>
-              Show Popup
-            </Button>
+            
             <Button variant="primary" onClick={handleShowNewSupply}>
               Add New Supply
             </Button>

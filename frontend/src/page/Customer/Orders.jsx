@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import CustomerBar from '../../component/CustomerBar';
-import { Modal, Button, Form,Tooltip, OverlayTrigger} from 'react-bootstrap';
+import { Modal, Button, Form, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import axios from 'axios';
 import moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-
-
 function CusPayment() {
   const [products, setProducts] = useState([]);
-  const [formFields, setFormFields] = useState([{ product: '', quantity: '' }]);
+  const [formFields, setFormFields] = useState([{ id: 1, product: '', quantity: '' }]);
   const [ordervalue, setOrderValue] = useState(0);
   const [deliverDate, setDeliverDate] = useState('');
   const [customerId, setCustomerId] = useState(null);
- 
+
   const fetchCustomerId = async () => {
     try {
       const userJson = localStorage.getItem('user');
@@ -51,12 +49,19 @@ function CusPayment() {
   }, []);
 
   const addFormField = () => {
-    setFormFields([...formFields, { product: '', quantity: '' }]);
+    const newId = formFields.length + 1;
+    setFormFields([...formFields, { id: newId, product: '', quantity: '' }]);
   };
 
-  const handleFormChange = (index, event) => {
-    const updatedFields = formFields.map((field, i) =>
-      i === index ? { ...field, [event.target.name]: event.target.value } : field
+  const removeFormField = (id) => {
+    const updatedFields = formFields.filter((field) => field.id !== id);
+    setFormFields(updatedFields);
+    calculateOrderValue(updatedFields);
+  };
+
+  const handleFormChange = (id, event) => {
+    const updatedFields = formFields.map((field) =>
+      field.id === id ? { ...field, [event.target.name]: event.target.value } : field
     );
     setFormFields(updatedFields);
     calculateOrderValue(updatedFields);
@@ -64,8 +69,8 @@ function CusPayment() {
 
   const calculateOrderValue = (fields) => {
     let total = 0;
-    fields.forEach(field => {
-      const product = products.find(p => p.Product_Name === field.product);
+    fields.forEach((field) => {
+      const product = products.find((p) => p.Product_Name === field.product);
       if (product && field.quantity) {
         total += product.Selling_Price * field.quantity;
       }
@@ -75,15 +80,38 @@ function CusPayment() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate deliverDate to be a future date
+    const currentDate = moment().format('YYYY-MM-DD');
+    if (moment(deliverDate).isBefore(currentDate, 'day')) {
+      toast.error('Invalid date. Please select a future date.');
+      return;
+    }
+
+    // Validate quantity to be multiple of 10 and at least 10
+    let isValidQuantity = true;
+    formFields.forEach((field) => {
+      const quantity = parseInt(field.quantity);
+      if (quantity < 10 || quantity % 10 !== 0) {
+        isValidQuantity = false;
+      }
+    });
+
+    if (!isValidQuantity) {
+      toast.error('Invalid quantity. Quantity should be at least 10 and in multiples of 10.');
+      return;
+    }
+
+    // If all validations pass, proceed with submitting the order
     const orderDate = moment().format('YYYY-MM-DD');
     try {
-      const orderItems = formFields.map(field => {
-        const product = products.find(p => p.Product_Name === field.product);
+      const orderItems = formFields.map((field) => {
+        const product = products.find((p) => p.Product_Name === field.product);
         const quantity = parseInt(field.quantity);
         return {
-          Product_ID: product.Product_ID, // Retrieve the Product_ID from the selected product
+          Product_ID: product.Product_ID,
           Quantity: quantity,
-          Value: field.quantity * product.Selling_Price,
+          Value: quantity * product.Selling_Price,
         };
       });
 
@@ -97,7 +125,7 @@ function CusPayment() {
       console.log('Order data:', orderData);
       await axios.post('http://localhost:8081/enter_customer_order', orderData);
       toast.success('Order placed successfully!');
-      setFormFields([{ product: '', quantity: '' }]);
+      setFormFields([{ id: 1, product: '', quantity: '' }]);
       setDeliverDate('');
       setOrderValue(0);
       fetchCustomerOrders();
@@ -109,25 +137,32 @@ function CusPayment() {
 
   return (
     <div>
-
       <div>
-        <CustomerBar/>
+        <CustomerBar />
       </div>
-       <br/>
-       <br/>
+      <br />
+      <br />
       <div style={{ textAlign: 'center' }}>
         <h1>Orders</h1>
       </div>
-      <div style={{ margin: 'auto', border: '1px solid black', padding: '20px', width: 'fit-content',fontSize:'20px' }}>
-  <Form onSubmit={handleSubmit}>
+      <div
+        style={{
+          margin: 'auto',
+          border: '1px solid black',
+          padding: '20px',
+          width: 'fit-content',
+          fontSize: '20px',
+        }}
+      >
+        <Form onSubmit={handleSubmit}>
           {formFields.map((field, index) => (
-            <div key={index} className="d-flex flex-row align-items-center mb-3">
-              <Form.Group className="flex-fill" controlId={`formBasicType${index}`}>
+            <div key={field.id} className="d-flex flex-row align-items-center mb-3">
+              <Form.Group className="flex-fill" controlId={`formBasicType${field.id}`}>
                 <Form.Label>Product</Form.Label>
                 <Form.Select
                   name="product"
                   value={field.product}
-                  onChange={(e) => handleFormChange(index, e)}
+                  onChange={(e) => handleFormChange(field.id, e)}
                 >
                   <option>Select the Product</option>
                   {products.map((product) => (
@@ -138,20 +173,31 @@ function CusPayment() {
                 </Form.Select>
               </Form.Group>
 
-              <Form.Group className="flex-fill ms-3" controlId={`formBasicTime${index}`}>
+              <Form.Group className="flex-fill ms-3" controlId={`formBasicTime${field.id}`}>
                 <Form.Label>Quantity</Form.Label>
                 <Form.Control
                   type="number"
                   name="quantity"
                   placeholder="Add the Quantity"
                   value={field.quantity}
-                  onChange={(e) => handleFormChange(index, e)}
+                  onChange={(e) => handleFormChange(field.id, e)}
                 />
               </Form.Group>
 
               {index === formFields.length - 1 && (
                 <Button variant="secondary" onClick={addFormField} className="ms-2" title="Add more products">
                   +
+                </Button>
+              )}
+
+              {formFields.length > 1 && (
+                <Button
+                  variant="danger"
+                  onClick={() => removeFormField(field.id)}
+                  className="ms-2"
+                  title="Remove this product"
+                >
+                  X
                 </Button>
               )}
             </div>
@@ -168,17 +214,23 @@ function CusPayment() {
             />
           </Form.Group>
 
-          <Form.Group controlId="formBasicCheckbox" style={{fontSize:"14px"}}>
-  <Form.Check type="checkbox" label="I agree with the price levels" required />
-</Form.Group>
+          <Form.Group controlId="formBasicCheckbox" style={{ fontSize: '14px' }}>
+            <Form.Check type="checkbox" label="I agree with the price levels" required />
+          </Form.Group>
 
           <OverlayTrigger
-          placement="top"
-          overlay={<Tooltip id="tooltip-submit">Submit your order</Tooltip>}>
-            <Button variant="primary" type="submit" className="submit-button" style={{ backgroundColor: '#1F618D', textAlign: 'center' }}>
-           Submit
-           </Button>
-</OverlayTrigger>
+            placement="top"
+            overlay={<Tooltip id="tooltip-submit">Submit your order</Tooltip>}
+          >
+            <Button
+              variant="primary"
+              type="submit"
+              className="submit-button"
+              style={{ backgroundColor: '#1F618D', textAlign: 'center' }}
+            >
+              Submit
+            </Button>
+          </OverlayTrigger>
         </Form>
 
         <div style={{ marginTop: '20px' }}>

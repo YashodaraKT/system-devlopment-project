@@ -29,15 +29,8 @@ function Hnbar() {
       <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
         <img src={NImage} alt="Your Image" style={{ height: '125px', width: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', top: '0', right: '0', padding: '10px', display: 'flex', alignItems: 'center' }}>
-          <IconButton aria-label="search" style={{ color: 'white' }}>
-            <SearchIcon />
-          </IconButton>
-          <TextField
-            placeholder="Search..."
-            variant="outlined"
-            size="small"
-            style={{ backgroundColor: 'white', borderRadius: '5px', marginLeft: '5px' }}
-          />
+          
+          
         </div>
       </div>
       <AppBar position="static" style={navbarStyle}>

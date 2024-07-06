@@ -33,7 +33,6 @@ function ViewCustomer() {
         <div><AdminBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>
           <Container className="mt-5">
-        <h1>Registered Customers</h1>
         <Button variant="primary" onClick={() => setModalShow(true)}>
           Add Customers
         </Button>
@@ -44,7 +43,7 @@ function ViewCustomer() {
             <tr>
               <th>ID</th>
               <th>Name</th>
-              <th>NIC</th>
+          
               <th>Contact Number</th>
               <th>Address</th>
               <th>Email</th>
@@ -56,7 +55,6 @@ function ViewCustomer() {
               <tr key={customer.Customer_ID}>
                 <td>{customer.Customer_ID}</td>
                 <td>{customer.Name}</td>
-                <td>{customer.NIC}</td>
                 <td>{customer.Contact_Number}</td>
                 <td>{`${customer.Address1}, ${customer.Address2}`}</td>
                 <td>{customer.Email}</td>

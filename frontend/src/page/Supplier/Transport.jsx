@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import ProfilenavBar from '../../component/ProfilenavBar';
-import { Button, TextField, Typography, Alert } from '@mui/material';
+import SupplierNBar from '../../component/SupplierNBar';
+import { Button, Form, Alert, Container, Row, Col } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function Transport() {
   const [showScheduledAppointments, setShowScheduledAppointments] = useState(false);
@@ -142,79 +143,99 @@ function Transport() {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div>
-        <div><ProfilenavBar userType="supplier" /></div>
+    <div>
+      <div><SupplierNBar userType="supplier" /></div>
 
-        <br />
-        <br />
-        <div style={{ margin: 'auto', border: '2px solid black', padding: '20px', width: '500px', fontSize: '20px' }}>
-          <form onSubmit={handleSubmit}>
-            <TextField style={{ marginBottom: '20px' }}
-              label="Address"
-              value={`${address1}, ${address2}`}
-              fullWidth
-              disabled
-            />
-            <TextField style={{ marginBottom: '20px' }}
-              label="Location Name"
-              value={locationName}
-              fullWidth
-              disabled
-            />
-            <TextField style={{ marginBottom: '20px' }}
-              label="Current Status"
-              value={getStatus()}
-              fullWidth
-              disabled
-            />
-            <TextField style={{ marginBottom: '20px' }}
-              label="Beginning From *"
-              type="date"
-              value={startDate}
-              onChange={handleStartDateChange}
-              fullWidth
-              required
-              error={!!errors.startDate}
-              helperText={errors.startDate}
-            />
-            <TextField style={{ marginBottom: '20px' }}
-              label="Description"
-              multiline
-              rows={4}
-              value={description}
-              onChange={handleDescriptionChange}
-              fullWidth
-            />
-            <div style={{ marginBottom: '20px' }}>
-              <input style={{ marginRight: '10px' }}
-                type="checkbox"
-                checked={agreement}
-                onChange={handleAgreementChange}
-              />
-              <Typography style={{ display: 'inline' }}>I agree with the price ranges</Typography>
-            </div>
-            {errors.agreement && <Alert severity="error">{errors.agreement}</Alert>}
-            <Button variant="contained" type="submit">
-              Submit
-            </Button>
-          </form>
+      <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div>
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
+          <Row>
+            <Col>
+              <div className="border p-4" style={{ width: '600px', fontSize: '20px' }}>
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Address</Form.Label>
+                    <Form.Control
+                      value={`${address1}, ${address2}`}
+                      disabled
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Location Name</Form.Label>
+                    <Form.Control
+                      value={locationName}
+                      disabled
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Current Status</Form.Label>
+                    <Form.Control
+                      value={getStatus()}
+                      disabled
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Beginning From *</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={startDate}
+                      onChange={handleStartDateChange}
+                      required
+                      isInvalid={!!errors.startDate}
+                    />
+                    <Form.Control.Feedback type="invalid">{errors.startDate}</Form.Control.Feedback>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Description</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={4}
+                      value={description}
+                      onChange={handleDescriptionChange}
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+  <Form.Check
+    type="checkbox"
+    label={<span style={{ fontSize: '16px' }}>I agree with the price ranges</span>}
+    checked={agreement}
+    onChange={handleAgreementChange}
+    isInvalid={!!errors.agreement}
+  />
+                    <Form.Control.Feedback type="invalid">{errors.agreement}</Form.Control.Feedback>
+                  </Form.Group>
+                  <Button variant="primary" type="submit">
+                    Submit
+                  </Button>
+                </Form>
 
-          {successMessage && <Alert severity="success" style={{ marginTop: '20px' }}>{successMessage}</Alert>}
-          {errors.submit && <Alert severity="error" style={{ marginTop: '20px' }}>{errors.submit}</Alert>}
-
-          <div style={{ marginTop: '20px' }}>
-            <ul>
-              <li>After confirming the transport, our drivers will contact you.</li>
-              <li>Please ensure your supplies are prepared on time.</li>
-              <li>Your payment will be reduced due to the transport costs.</li>
-</ul>
-</div>
-</div>
-
+                {successMessage && <Alert variant="success" className="mt-3">{successMessage}</Alert>}
+                {errors.submit && <Alert variant="danger" className="mt-3">{errors.submit}</Alert>}
+              </div>
+            </Col>
+            <Col>
+  <div className="border p-4" style={{ width: '400px', fontSize: '15px' }}>
+    <div className="mt-3">
+      <p>Dear valued supplier,</p>
+      <p>If you have changed the transport status within the last 30 days, you can submit a new request.</p>
+      <p>After confirming the transport, our drivers will contact you. Please ensure your supplies are prepared on time. Note that your payment will be reduced to account for the transport costs.</p>
+      <p>Thank you for your cooperation.</p>
+      <p>Manager</p>
+      <p>Moro Farms (pvt)Ltd</p>
+    </div>
   </div>
-</div>
-);
+</Col>
+
+          </Row>
+        </div>
+      </Container>
+    </div>
+  );
 }
 
 export default Transport;
