@@ -10,9 +10,6 @@ import ProfileBar from '../../component/ProfileBar';
 
 function ViewSupplier() {
  
-
-
-
   const [modalShow, setModalShow] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [locations, setLocations] = useState([]);
