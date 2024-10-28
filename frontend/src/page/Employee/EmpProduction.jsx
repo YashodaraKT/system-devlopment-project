@@ -232,6 +232,18 @@ function Production() {
                 />
               </Col>
             </Row>
+            <Row className="mt-3">
+  <Col md={4}>
+    <input
+      type="date"
+      id="Date"
+      name="Date"
+      value={newProduction.Date}
+      onChange={handleInputChange}
+      className="form-control"
+    />
+  </Col>
+</Row>
 
             {/* Fish Consumption Section */}
             <Row className="mt-3">

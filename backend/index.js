@@ -1093,13 +1093,12 @@ app.get('/total_products', (req, res) => {
 
 
 // Assuming you're using Express and MySQL
-app.post('/addproduction', (req, res) => {
+app.post('/addproduction', async (req, res) => {
   const { Product_ID, Date, Quantity, A_User_ID, Materials, fishQuantity } = req.body;
 
   const sqlInsertProduction = 'INSERT INTO production (Product_ID, Date, Quantity, A_User_ID) VALUES (?, ?, ?, ?)';
 
-  // Step 1: Insert production record and get its ID
-  db.query(sqlInsertProduction, [Product_ID, Date, Quantity, A_User_ID], (err, productionResult) => {
+  db.query(sqlInsertProduction, [Product_ID, Date, Quantity, A_User_ID], async (err, productionResult) => {
     if (err) {
       console.error('Error adding production:', err);
       return res.status(500).send({ message: err.message });
@@ -1108,121 +1107,94 @@ app.post('/addproduction', (req, res) => {
     const productionId = productionResult.insertId;
     console.log(`Production added with ID: ${productionId}`);
 
-    // Step 2: Process each material in Materials array
-    const materialPromises = Materials.map((material) => {
-      return new Promise((resolve, reject) => {
-        console.log(`Processing material: ${material.RawMaterial} with required quantity: ${material.MaterialQuantity}`);
+    try {
+      for (const material of Materials) {
+        const requiredMaterialQuantity = material.MaterialQuantity;  // Quantity entered in frontend for this material
 
-        // Get the R_ID of the raw material
-        const sqlGetRawMaterialID = 'SELECT R_ID FROM rawmaterial WHERE R_Name = ?';
-        db.query(sqlGetRawMaterialID, [material.RawMaterial], (err, result) => {
-          if (err) return reject(err);
-          if (result.length === 0) return reject(new Error(`Raw material ${material.RawMaterial} not found`));
-          const R_ID = result[0].R_ID;
-
-          console.log(`Found R_ID: ${R_ID} for material: ${material.RawMaterial}`);
-
-          // Get lots for this raw material, sorted by FIFO (oldest first)
-          const sqlGetMaterialLots = 'SELECT A_ID, Ava_Quantity FROM rawmaterial_inv WHERE R_ID = ? AND Ava_Quantity > 0 ORDER BY Date ASC';
-          db.query(sqlGetMaterialLots, [R_ID], (err, lots) => {
+        await new Promise((resolve, reject) => {
+          const sqlGetRawMaterialID = 'SELECT R_ID FROM rawmaterial WHERE R_Name = ?';
+          db.query(sqlGetRawMaterialID, [material.RawMaterial], (err, result) => {
             if (err) return reject(err);
+            if (result.length === 0) return reject(new Error(`Raw material ${material.RawMaterial} not found`));
+            const R_ID = result[0].R_ID;
 
-            console.log(`Fetched lots for ${material.RawMaterial}:`, lots);
-
-            let remainingQuantity = material.MaterialQuantity;
-            let productionMaterialId;
-
-            // Insert a record in production_material with total quantity for this material
+            // Insert directly into production_material using the exact quantity from frontend
             const sqlInsertProductionMaterial = 'INSERT INTO production_material (P_ID, R_ID, Quantity) VALUES (?, ?, ?)';
-            db.query(sqlInsertProductionMaterial, [productionId, R_ID, remainingQuantity], (err, result) => {
+            db.query(sqlInsertProductionMaterial, [productionId, R_ID, requiredMaterialQuantity], (err, prodMatResult) => {
               if (err) return reject(err);
-              productionMaterialId = result.insertId;
-              console.log(`Inserted into production_material with PM_ID: ${productionMaterialId} for R_ID: ${R_ID}`);
 
-              // Process each lot in FIFO order
-              const lotPromises = lots.map((lot) => {
-                return new Promise((lotResolve, lotReject) => {
-                  if (remainingQuantity <= 0) return lotResolve(); // Skip if no quantity left to fulfill
+              const PM_ID = prodMatResult.insertId;
 
-                  const availableInLot = lot.Ava_Quantity;
-                  // Calculate the quantity to use from this lot
-                  const quantityToUse = Math.min(remainingQuantity, availableInLot); // Use only as much as needed from this lot
+              const sqlGetMaterialLots = 'SELECT A_ID, Ava_Quantity FROM rawmaterial_inv WHERE R_ID = ? AND Ava_Quantity > 0 ORDER BY Date ASC';
+              db.query(sqlGetMaterialLots, [R_ID], (err, lots) => {
+                if (err) return reject(err);
 
-                  console.log(`Using ${quantityToUse} from lot with A_ID: ${lot.A_ID}, available quantity: ${availableInLot}, remaining required quantity: ${remainingQuantity}`);
+                let remainingQuantity = requiredMaterialQuantity; // Track quantity still needed from lots
 
-                  // Insert into material_lot table
-                  const sqlInsertMaterialLot = 'INSERT INTO material_lot (A_ID, PM_ID, Quantity) VALUES (?, ?, ?)';
-                  db.query(sqlInsertMaterialLot, [lot.A_ID, productionMaterialId, quantityToUse], (err) => {
-                    if (err) return lotReject(err);
-                    console.log(`Inserted ${quantityToUse} into material_lot for A_ID: ${lot.A_ID}, PM_ID: ${productionMaterialId}`);
+                const allocateFromLots = async () => {
+                  for (const lot of lots) {
+                    if (remainingQuantity <= 0) break;
 
-                    // Update Ava_Quantity in rawmaterial_inv
-                    const newAvaQuantity = availableInLot - quantityToUse;
-                    const sqlUpdateAvaQuantity = 'UPDATE rawmaterial_inv SET Ava_Quantity = ? WHERE A_ID = ?';
-                    db.query(sqlUpdateAvaQuantity, [newAvaQuantity, lot.A_ID], (err) => {
-                      if (err) return lotReject(err);
-                      console.log(`Updated rawmaterial_inv with new Ava_Quantity: ${newAvaQuantity} for A_ID: ${lot.A_ID}`);
+                    const availableInLot = lot.Ava_Quantity;
+                    const quantityToUse = Math.min(remainingQuantity, availableInLot);
 
-                      remainingQuantity -= quantityToUse; // Reduce only the required amount for this lot
-                      console.log(`Updated remaining quantity to fulfill for ${material.RawMaterial}: ${remainingQuantity}`);
+                    console.log(`Using ${quantityToUse} from lot with A_ID: ${lot.A_ID}, available quantity: ${availableInLot}`);
 
-                      lotResolve();
+                    await new Promise((lotResolve, lotReject) => {
+                      // Insert into material_lot with the unique PM_ID from production_material
+                      const sqlInsertMaterialLot = 'INSERT INTO material_lot (A_ID, PM_ID, Quantity) VALUES (?, ?, ?)';
+                      db.query(sqlInsertMaterialLot, [lot.A_ID, PM_ID, quantityToUse], (err) => {
+                        if (err) return lotReject(err);
+
+                        const newAvaQuantity = availableInLot - quantityToUse;
+                        const sqlUpdateAvaQuantity = 'UPDATE rawmaterial_inv SET Ava_Quantity = ? WHERE A_ID = ?';
+                        db.query(sqlUpdateAvaQuantity, [newAvaQuantity, lot.A_ID], (err) => {
+                          if (err) return lotReject(err);
+
+                          remainingQuantity -= quantityToUse;
+                          console.log(`Updated remaining quantity to fulfill for ${material.RawMaterial}: ${Math.max(0, remainingQuantity)}`);
+                          lotResolve();
+                        });
+                      });
                     });
-                  });
-                });
-              });
-
-              // Resolve all lot promises
-              Promise.all(lotPromises)
-                .then(() => {
-                  if (remainingQuantity > 0) {
-                    console.error(`Insufficient quantity available for ${material.RawMaterial}, remaining: ${remainingQuantity}`);
-                    return reject(new Error(`Insufficient quantity available for ${material.RawMaterial}`));
                   }
-                  resolve();
-                })
-                .catch(reject);
+                };
+
+                allocateFromLots().then(() => resolve()).catch(reject);
+              });
             });
           });
         });
-      });
-    });
+      }
 
-    // Wait for all materials to be processed
-    Promise.all(materialPromises)
-      .then(() => {
-        // Step 4: Call /consumeFish after adding production
-        if (fishQuantity > 0) {
-          const consumeOptions = {
-            method: 'POST',
-            url: '/consumeFish',
-            data: {
-              fishQuantity: fishQuantity,
-              P_ID: productionId
-            }
-          };
+      if (fishQuantity > 0) {
+        const consumeOptions = {
+          method: 'POST',
+          url: '/consumeFish',
+          data: {
+            fishQuantity: fishQuantity,
+            P_ID: productionId
+          }
+        };
 
-          // Make an HTTP request to consumeFish
-          axios(consumeOptions)
-            .then((consumeResponse) => {
-              console.log('Fish consumption response:', consumeResponse.data);
-              res.status(200).send({ message: 'Production and materials added successfully with FIFO and Ava_Quantity update', P_ID: productionId });
-            })
-            .catch((error) => {
-              console.error('Error during fish consumption:', error);
-              res.status(500).send({ message: 'Error consuming fish from supply.', error: error.message });
-            });
-        } else {
-          res.status(200).send({ message: 'Production and materials added successfully with FIFO and Ava_Quantity update', P_ID: productionId });
-        }
-      })
-      .catch(err => {
-        console.error('Error processing materials:', err);
-        res.status(500).send({ message: err.message });
-      });
+        await axios(consumeOptions)
+          .then((consumeResponse) => {
+            console.log('Fish consumption response:', consumeResponse.data);
+            res.status(200).send({ message: 'Production and materials added successfully with FIFO and Ava_Quantity update', P_ID: productionId });
+          })
+          .catch((error) => {
+            console.error('Error during fish consumption:', error);
+            res.status(500).send({ message: 'Error consuming fish from supply.', error: error.message });
+          });
+      } else {
+        res.status(200).send({ message: 'Production and materials added successfully with FIFO and Ava_Quantity update', P_ID: productionId });
+      }
+    } catch (err) {
+      console.error('Error processing materials:', err);
+      res.status(500).send({ message: err.message });
+    }
   });
 });
-
 
 
 

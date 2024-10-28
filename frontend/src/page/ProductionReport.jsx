@@ -67,7 +67,7 @@ function ProductionReport() {
                                         <TableCell>Quantity</TableCell>
                                         <TableCell>Lot ID</TableCell>
                                         <TableCell>Lot Quantity</TableCell>
-                                        <TableCell>Date</TableCell>
+                                         
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -79,7 +79,7 @@ function ProductionReport() {
                                             <TableCell>{record.materialQuantity}</TableCell>
                                             <TableCell>{record.lotId}</TableCell>
                                             <TableCell>{record.lotQuantity}</TableCell>
-                                            <TableCell>{new Date(record.Date).toLocaleDateString()}</TableCell>
+                                            
                                         </TableRow>
                                     ))}
                                 </TableBody>
