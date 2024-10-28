@@ -36,6 +36,7 @@ import PendingApp from './page/Employee/PendingApp';
 import FTest from './page/Employee/FTest';
 import AddSupplier from './page/Admin/AddSupplier';
 import Product from './page/Admin/Product';
+import ProductionReport from './page/ProductionReport.jsx';
 
 import './App.css';
 import logo from './logo.svg';
@@ -132,6 +133,7 @@ function App() {
           <Route path='/ftest' element={<FTest />}></Route>
           <Route path='/newsupplier' element={<AdminAuth><AddSupplier /></AdminAuth>}></Route>
           <Route path='/productcart' element={<ProductCart />}></Route>
+          <Route path='/ProductionReport' element={<ProductionReport />}></Route>
     
         </Routes>
       </BrowserRouter>

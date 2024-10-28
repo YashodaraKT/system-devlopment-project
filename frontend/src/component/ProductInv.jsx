@@ -1,26 +1,34 @@
 import React from 'react';
-import { Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
+import { Modal, Button, Table } from 'react-bootstrap';
 
-function ProductInv({ productionData = [] }) {
+function ProductInv({ show, handleClose, productionData = [] }) {
   return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableCell>Product Name</TableCell>
-          <TableCell>Total Quantity(kg)</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {productionData.map((row) => (
-          <TableRow key={row.productId}>
-            <TableCell>{row.productName}</TableCell>
-            <TableCell>
-              {row.totalQuantity === 0 ? 'Out of Stock' : `${row.totalQuantity} kg`}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <Modal show={show} onHide={handleClose}>
+      <Modal.Header closeButton>
+        <Modal.Title>Product Inventory</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Table striped bordered hover>
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Total Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {productionData.map((production, index) => (
+              <tr key={index}>
+                <td>{production.Product_Name}</td>
+                <td>{production.totalQuantity}</td> {/* Use totalQuantity from the new API response */}
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>Close</Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 

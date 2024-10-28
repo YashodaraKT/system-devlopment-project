@@ -926,30 +926,30 @@ app.post('/add_supply', (req, res) => {
   const { Supplier_ID, Quantity, Date, R_User_ID, Location_Id, Transport_Status } = req.body;
   const transportColumn = Transport_Status === 'With Transport' ? 'Price' : 'Price_WT';
 
+  // Step 1: Get the price from the location table based on the transport status
   const getPriceQuery = `SELECT ${transportColumn} AS Unit_Price FROM location WHERE Location_Id = ?`;
 
   db.query(getPriceQuery, [Location_Id], (err, result) => {
     if (err) {
-      res.status(500).send({ message: err.message });
-      return;
+      return res.status(500).send({ message: err.message });
     }
 
     if (result.length === 0) {
-      res.status(404).send({ message: 'Location not found' });
-      return;
+      return res.status(404).send({ message: 'Location not found' });
     }
 
     const unitPrice = result[0].Unit_Price;
     const Payment = unitPrice * Quantity;
 
+    // Step 2: Insert the new supply into the supply table, setting both Quantity and Ava_Quantity to the given Quantity
     const addSupplyQuery = `
-      INSERT INTO supply (Supplier_ID, Quantity, Payment, Date, Payment_Status, R_User_ID, Location_Id, Transport_Status)
-      VALUES (?, ?, ?, ?, 0, ?, ?, ?)
+      INSERT INTO supply (Supplier_ID, Quantity, Ava_Quantity, Payment, Date, Payment_Status, R_User_ID, Location_Id, Transport_Status)
+      VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
     `;
 
-    db.query(addSupplyQuery, [Supplier_ID, Quantity, Payment, Date, R_User_ID, Location_Id, Transport_Status], (err, result) => {
+    db.query(addSupplyQuery, [Supplier_ID, Quantity, Quantity, Payment, Date, R_User_ID, Location_Id, Transport_Status], (err, result) => {
       if (err) {
-        res.status(500).send({ message: err.message });
+        return res.status(500).send({ message: err.message });
       } else {
         res.send({ message: 'Supply added successfully.' });
       }
@@ -1037,7 +1037,8 @@ app.get('/viewproduction', (req, res) => {
       p.Product_Name, 
       pr.Date, 
       pr.Quantity, 
-      COALESCE(CONCAT(st.Staff_ID, ' - ', st.Name), 'Admin') AS EnteredBy
+      COALESCE(CONCAT(st.Staff_ID, ' - ', st.Name), 'Admin') AS EnteredBy,
+      pr.P_ID
     FROM 
       production pr
     JOIN 
@@ -1045,33 +1046,266 @@ app.get('/viewproduction', (req, res) => {
     LEFT JOIN
       staff st ON pr.A_User_ID = st.User_ID
   `;
-  db.query(sql, (err, result) => {
+  
+  db.query(sql, (err, productions) => {
     if (err) {
       res.status(500).send(err);
     } else {
-      res.send(result);
+      // Now for each production record, fetch the associated materials
+      const promises = productions.map((production) => {
+        const materialSql = `
+          SELECT rm.R_Name, pm.Quantity AS MaterialQuantity
+          FROM production_material pm
+          JOIN rawmaterial rm ON pm.R_ID = rm.R_ID
+          WHERE pm.P_ID = ?
+        `;
+        return new Promise((resolve, reject) => {
+          db.query(materialSql, [production.P_ID], (err, materials) => {
+            if (err) {
+              reject(err);
+            } else {
+              production.Materials = materials; // Add materials to the production record
+              resolve(production);
+            }
+          });
+        });
+      });
+
+      Promise.all(promises)
+        .then((results) => res.send(results))
+        .catch((err) => res.status(500).send(err));
     }
   });
 });
 
+app.get('/total_products', (req, res) => {
+  const query = `
+    SELECT Product_Name, In_Stock AS totalQuantity 
+    FROM Product;`; // Adjust the table name and fields accordingly
 
+  db.query(query, (error, results) => {
+    if (error) {
+      return res.status(500).json({ error: 'Database query error' });
+    }
+    res.json(results);
+  });
+});
 
 
 // Assuming you're using Express and MySQL
 app.post('/addproduction', (req, res) => {
-  const { Product_ID, Date, Quantity, A_User_ID } = req.body;
+  const { Product_ID, Date, Quantity, A_User_ID, Materials, fishQuantity } = req.body;
 
-  // SQL query to insert the new production record including A_User_ID
-  const sql = 'INSERT INTO production (Product_ID, Date, Quantity, A_User_ID) VALUES (?, ?, ?, ?)';
+  const sqlInsertProduction = 'INSERT INTO production (Product_ID, Date, Quantity, A_User_ID) VALUES (?, ?, ?, ?)';
 
-  db.query(sql, [Product_ID, Date, Quantity, A_User_ID], (err, result) => {
+  // Step 1: Insert production record and get its ID
+  db.query(sqlInsertProduction, [Product_ID, Date, Quantity, A_User_ID], (err, productionResult) => {
     if (err) {
-      res.status(500).send({ message: err.message });
-    } else {
-      res.status(200).send('Production added successfully');
+      console.error('Error adding production:', err);
+      return res.status(500).send({ message: err.message });
     }
+
+    const productionId = productionResult.insertId;
+    console.log(`Production added with ID: ${productionId}`);
+
+    // Step 2: Process each material in Materials array
+    const materialPromises = Materials.map((material) => {
+      return new Promise((resolve, reject) => {
+        console.log(`Processing material: ${material.RawMaterial} with required quantity: ${material.MaterialQuantity}`);
+
+        // Get the R_ID of the raw material
+        const sqlGetRawMaterialID = 'SELECT R_ID FROM rawmaterial WHERE R_Name = ?';
+        db.query(sqlGetRawMaterialID, [material.RawMaterial], (err, result) => {
+          if (err) return reject(err);
+          if (result.length === 0) return reject(new Error(`Raw material ${material.RawMaterial} not found`));
+          const R_ID = result[0].R_ID;
+
+          console.log(`Found R_ID: ${R_ID} for material: ${material.RawMaterial}`);
+
+          // Get lots for this raw material, sorted by FIFO (oldest first)
+          const sqlGetMaterialLots = 'SELECT A_ID, Ava_Quantity FROM rawmaterial_inv WHERE R_ID = ? AND Ava_Quantity > 0 ORDER BY Date ASC';
+          db.query(sqlGetMaterialLots, [R_ID], (err, lots) => {
+            if (err) return reject(err);
+
+            console.log(`Fetched lots for ${material.RawMaterial}:`, lots);
+
+            let remainingQuantity = material.MaterialQuantity;
+            let productionMaterialId;
+
+            // Insert a record in production_material with total quantity for this material
+            const sqlInsertProductionMaterial = 'INSERT INTO production_material (P_ID, R_ID, Quantity) VALUES (?, ?, ?)';
+            db.query(sqlInsertProductionMaterial, [productionId, R_ID, remainingQuantity], (err, result) => {
+              if (err) return reject(err);
+              productionMaterialId = result.insertId;
+              console.log(`Inserted into production_material with PM_ID: ${productionMaterialId} for R_ID: ${R_ID}`);
+
+              // Process each lot in FIFO order
+              const lotPromises = lots.map((lot) => {
+                return new Promise((lotResolve, lotReject) => {
+                  if (remainingQuantity <= 0) return lotResolve(); // Skip if no quantity left to fulfill
+
+                  const availableInLot = lot.Ava_Quantity;
+                  // Calculate the quantity to use from this lot
+                  const quantityToUse = Math.min(remainingQuantity, availableInLot); // Use only as much as needed from this lot
+
+                  console.log(`Using ${quantityToUse} from lot with A_ID: ${lot.A_ID}, available quantity: ${availableInLot}, remaining required quantity: ${remainingQuantity}`);
+
+                  // Insert into material_lot table
+                  const sqlInsertMaterialLot = 'INSERT INTO material_lot (A_ID, PM_ID, Quantity) VALUES (?, ?, ?)';
+                  db.query(sqlInsertMaterialLot, [lot.A_ID, productionMaterialId, quantityToUse], (err) => {
+                    if (err) return lotReject(err);
+                    console.log(`Inserted ${quantityToUse} into material_lot for A_ID: ${lot.A_ID}, PM_ID: ${productionMaterialId}`);
+
+                    // Update Ava_Quantity in rawmaterial_inv
+                    const newAvaQuantity = availableInLot - quantityToUse;
+                    const sqlUpdateAvaQuantity = 'UPDATE rawmaterial_inv SET Ava_Quantity = ? WHERE A_ID = ?';
+                    db.query(sqlUpdateAvaQuantity, [newAvaQuantity, lot.A_ID], (err) => {
+                      if (err) return lotReject(err);
+                      console.log(`Updated rawmaterial_inv with new Ava_Quantity: ${newAvaQuantity} for A_ID: ${lot.A_ID}`);
+
+                      remainingQuantity -= quantityToUse; // Reduce only the required amount for this lot
+                      console.log(`Updated remaining quantity to fulfill for ${material.RawMaterial}: ${remainingQuantity}`);
+
+                      lotResolve();
+                    });
+                  });
+                });
+              });
+
+              // Resolve all lot promises
+              Promise.all(lotPromises)
+                .then(() => {
+                  if (remainingQuantity > 0) {
+                    console.error(`Insufficient quantity available for ${material.RawMaterial}, remaining: ${remainingQuantity}`);
+                    return reject(new Error(`Insufficient quantity available for ${material.RawMaterial}`));
+                  }
+                  resolve();
+                })
+                .catch(reject);
+            });
+          });
+        });
+      });
+    });
+
+    // Wait for all materials to be processed
+    Promise.all(materialPromises)
+      .then(() => {
+        // Step 4: Call /consumeFish after adding production
+        if (fishQuantity > 0) {
+          const consumeOptions = {
+            method: 'POST',
+            url: '/consumeFish',
+            data: {
+              fishQuantity: fishQuantity,
+              P_ID: productionId
+            }
+          };
+
+          // Make an HTTP request to consumeFish
+          axios(consumeOptions)
+            .then((consumeResponse) => {
+              console.log('Fish consumption response:', consumeResponse.data);
+              res.status(200).send({ message: 'Production and materials added successfully with FIFO and Ava_Quantity update', P_ID: productionId });
+            })
+            .catch((error) => {
+              console.error('Error during fish consumption:', error);
+              res.status(500).send({ message: 'Error consuming fish from supply.', error: error.message });
+            });
+        } else {
+          res.status(200).send({ message: 'Production and materials added successfully with FIFO and Ava_Quantity update', P_ID: productionId });
+        }
+      })
+      .catch(err => {
+        console.error('Error processing materials:', err);
+        res.status(500).send({ message: err.message });
+      });
   });
 });
+
+
+
+
+
+app.post('/consumeFish', (req, res) => {
+  const { fishQuantity, P_ID } = req.body;
+
+  if (!P_ID) {
+    return res.status(400).json({ message: 'P_ID is required for fish consumption.' });
+  }
+
+  let quantityToReduce = fishQuantity;
+
+  db.query(
+    `SELECT * FROM supply WHERE Ava_Quantity > 0 ORDER BY Date ASC, Supply_ID ASC`,
+    (error, result) => {
+      if (error) {
+        console.error('Error fetching supplies:', error);
+        return res.status(500).json({ message: 'Error fetching supplies from database.', error: error.message });
+      }
+
+      const consumeFish = async () => {
+        for (const supply of result) {
+          if (quantityToReduce <= 0) break; // Stop if we have consumed enough
+
+          const availableQuantity = supply.Ava_Quantity;
+
+          if (availableQuantity > 0) {
+            const reduceQuantity = Math.min(availableQuantity, quantityToReduce);
+
+            // Update the available quantity in the supply
+            await new Promise((resolve, reject) => {
+              db.query(
+                `UPDATE supply SET Ava_Quantity = Ava_Quantity - ? WHERE Supply_ID = ?`,
+                [reduceQuantity, supply.Supply_ID],
+                (err) => {
+                  if (err) {
+                    console.error(`Error updating Supply_ID ${supply.Supply_ID}:`, err);
+                    return reject(err);
+                  }
+                  resolve();
+                }
+              );
+            });
+
+            // Log the consumption into production_fish
+            await new Promise((resolve, reject) => {
+              db.query(
+                `INSERT INTO production_fish (P_ID, Supply_ID, Quantity) VALUES (?, ?, ?)`,
+                [P_ID, supply.Supply_ID, reduceQuantity],
+                (insertErr) => {
+                  if (insertErr) {
+                    console.error('Error logging to production_fish:', insertErr);
+                    return reject(insertErr);
+                  }
+                  console.log(`Logged ${reduceQuantity} of Supply_ID ${supply.Supply_ID} to production_fish`);
+                  quantityToReduce -= reduceQuantity; // Reduce the quantity to consume
+                  resolve();
+                }
+              );
+            });
+          }
+        }
+
+        if (quantityToReduce > 0) {
+          return res.status(400).json({ message: `Could not consume all fish. ${quantityToReduce} quantity still needed.` });
+        }
+
+        res.json({ message: 'Fish consumption and logging updated successfully.' });
+      };
+
+      consumeFish().catch(err => {
+        console.error('Error during fish consumption:', err);
+        res.status(500).json({ message: 'Error consuming fish from supply.', error: err.message });
+      });
+    }
+  );
+});
+
+
+
+
+
 
 
 // Endpoint to get products
@@ -1157,7 +1391,7 @@ app.get('/getRawMaterialInventory', (req, res) => {
            rm.R_Name, 
            ri.Quantity, 
            ri.Date, 
-           ri.Action,
+           ri.Lot_Price,
            COALESCE(CONCAT(st.Staff_ID, ' - ', st.Name), 'Admin') AS EnteredBy
     FROM rawmaterial_inv ri
     JOIN rawmaterial rm ON ri.R_ID = rm.R_ID
@@ -1175,38 +1409,37 @@ app.get('/getRawMaterialInventory', (req, res) => {
 
 //-----------------add or purchase RM
 app.post('/addRawMaterial', (req, res) => {
-  const { R_Name, Quantity, Date, Action, A_User_ID } = req.body;
-  
+  const { R_Name, Quantity, Date, Lot_Price, A_User_ID } = req.body;
+
   // Step 1: Retrieve R_ID for the given R_Name
   const getRIdQuery = `
-    SELECT R_ID, Stock FROM rawmaterial WHERE R_Name = ?
+    SELECT R_ID, Stock FROM rawmaterial WHERE R_Name = ?;
   `;
-  
+
   db.query(getRIdQuery, [R_Name], (err, result) => {
     if (err) {
       console.error('Error fetching R_ID:', err);
       return res.status(500).send(err);
     } else {
       if (result.length === 0) {
+        // Raw material doesn't exist; handle this scenario if needed
         return res.status(404).send('Raw material not found');
       }
-      
-      const { R_ID, Stock } = result[0];
-      
-      // Step 2: Check if stock is sufficient
-      if (Action === 0 && Stock - Quantity < 0) {
-        return res.status(400).send('Insufficient stock');
-      }
 
-      // Step 3: Insert new record into rawmaterial_inv
+      const { R_ID } = result[0];
+
+      // Step 2: Insert new record into rawmaterial_inv with Ava_Quantity
       const insertQuery = `
-        INSERT INTO rawmaterial_inv (R_ID, Quantity, Date, Action, A_User_ID)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO rawmaterial_inv (R_ID, Quantity, Date, Lot_Price, A_User_ID, Ava_Quantity) 
+        VALUES (?, ?, ?, ?, ?, ?);
       `;
       
-      db.query(insertQuery, [R_ID, Quantity, Date, Action, A_User_ID], (err, result) => {
+      // Set Ava_Quantity equal to Quantity for the first entry
+      const insertValues = [R_ID, Quantity, Date, Lot_Price, A_User_ID, Quantity];
+
+      db.query(insertQuery, insertValues, (err) => {
         if (err) {
-          console.error('Error inserting raw material:', err);
+          console.error('Error inserting raw material into rawmaterial_inv:', err);
           return res.status(500).send(err);
         } else {
           console.log('Raw material added successfully');
@@ -1683,6 +1916,47 @@ app.get('/suppliers_by_location', (req, res) => {
     }
   });
 });
+///Production Report
+
+app.get('/production_report', (req, res) => {
+  const { start, end } = req.query;
+
+  const query = `
+      SELECT
+          p.P_ID AS productionId,
+          pr.Product_Name AS productName,
+          p.Date,
+          pm.R_ID AS rawMaterialId,
+          r.R_Name AS materialName,
+          pm.Quantity AS materialQuantity,
+          ml.A_ID AS lotId,
+          ml.Quantity AS lotQuantity
+      FROM
+          production p
+      JOIN
+          product pr ON p.Product_ID = pr.Product_ID
+      JOIN
+          production_material pm ON p.P_ID = pm.P_ID
+      JOIN
+          rawmaterial r ON pm.R_ID = r.R_ID
+      JOIN
+          material_lot ml ON pm.PM_ID = ml.PM_ID
+      WHERE
+          p.Date BETWEEN ? AND ?
+  `;
+
+  db.query(query, [start, end], (error, results) => {
+      if (error) {
+          console.error('Error executing query:', error);
+          return res.status(500).json({ message: 'Failed to fetch production data', error: error.message });
+      }
+      res.json(results);
+  });
+});
+
+
+
+
 
 //-------------------------------------------
 app.listen(8081,()=>{
