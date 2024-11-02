@@ -5,6 +5,7 @@ import cors from 'cors';
 import mysql from 'mysql';
 import moment from 'moment';
 
+
 import multer from 'multer';
 import path from 'path';
 const storage = multer.diskStorage({
@@ -561,7 +562,7 @@ app.put("/Approval_orders/:orderId", (req, res) => {
 
     if (Approval === 1) {
       // Check stock levels
-      const sqlGetOrderItems = `SELECT Product_ID, Quantity FROM order_item WHERE Order_ID = ?`;
+      const sqlGetOrderItems = `SELECT Product_ID, Quantity, Item_O_ID FROM order_item WHERE Order_ID = ?`;
 
       db.query(sqlGetOrderItems, [orderId], (err, orderItems) => {
         if (err) {
@@ -622,17 +623,89 @@ app.put("/Approval_orders/:orderId", (req, res) => {
 
               Promise.all(updateStockPromises)
                 .then(() => {
-                  // Update the customer_order table
-                  const sqlUpdateOrder = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+                  // Reduce from production table using FIFO and record in item_lot
+                  const reduceProductionPromises = orderItems.map(item => {
+                    return new Promise((resolve, reject) => {
+                      let remainingQuantity = item.Quantity;
 
-                  db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
-                    if (err) {
-                      console.error("Error updating order:", err);
-                      return res.status(500).json({ error: "Error updating order" });
-                    }
-                    console.log("Order updated:", result);
-                    return res.json({ message: "Order updated successfully" });
+                      const sqlGetFIFO = `
+                        SELECT P_ID, Ava_Quantity FROM production
+                        WHERE Product_ID = ?
+                        AND Ava_Quantity > 0
+                        ORDER BY P_ID ASC
+                      `;
+
+                      db.query(sqlGetFIFO, [item.Product_ID], (fifoErr, productionBatches) => {
+                        if (fifoErr) {
+                          console.error(`Error fetching FIFO records for Product_ID ${item.Product_ID}:`, fifoErr);
+                          reject(fifoErr);
+                        }
+
+                        const updateBatchPromises = productionBatches.map(batch => {
+                          if (remainingQuantity <= 0) return Promise.resolve();
+
+                          const quantityToDeduct = Math.min(batch.Ava_Quantity, remainingQuantity);
+                          remainingQuantity -= quantityToDeduct;
+
+                          const sqlUpdateProduction = `
+                            UPDATE production
+                            SET Ava_Quantity = Ava_Quantity - ?
+                            WHERE P_ID = ?
+                          `;
+
+                          return new Promise((batchResolve, batchReject) => {
+                            db.query(sqlUpdateProduction, [quantityToDeduct, batch.P_ID], (updateErr) => {
+                              if (updateErr) {
+                                console.error(`Error updating production for P_ID ${batch.P_ID}:`, updateErr);
+                                batchReject(updateErr);
+                              } else {
+                                console.log(`Production batch ${batch.P_ID} updated with ${quantityToDeduct}`);
+
+                                // Insert record into item_lot table
+                                const sqlInsertItemLot = `
+                                  INSERT INTO item_lot (P_ID, Quantity, Item_O_ID)
+                                  VALUES (?, ?, ?)
+                                `;
+
+                                db.query(sqlInsertItemLot, [batch.P_ID, quantityToDeduct, item.Item_O_ID], (insertErr) => {
+                                  if (insertErr) {
+                                    console.error(`Error inserting into item_lot for P_ID ${batch.P_ID}:`, insertErr);
+                                    batchReject(insertErr);
+                                  } else {
+                                    console.log(`Record inserted into item_lot for P_ID ${batch.P_ID}, Quantity: ${quantityToDeduct}, Item_O_ID: ${item.Item_O_ID}`);
+                                    batchResolve();
+                                  }
+                                });
+                              }
+                            });
+                          });
+                        });
+
+                        Promise.all(updateBatchPromises)
+                          .then(() => resolve())
+                          .catch(updateErr => reject(updateErr));
+                      });
+                    });
                   });
+
+                  Promise.all(reduceProductionPromises)
+                    .then(() => {
+                      // Update the customer_order table
+                      const sqlUpdateOrder = `UPDATE customer_order SET Approval = ? WHERE Order_ID = ?`;
+
+                      db.query(sqlUpdateOrder, [Approval, orderId], (err, result) => {
+                        if (err) {
+                          console.error("Error updating order:", err);
+                          return res.status(500).json({ error: "Error updating order" });
+                        }
+                        console.log("Order updated:", result);
+                        return res.json({ message: "Order updated successfully" });
+                      });
+                    })
+                    .catch(updateErr => {
+                      console.error("Error updating production table with FIFO:", updateErr);
+                      return res.status(500).json({ error: "Error updating production table" });
+                    });
                 })
                 .catch(updateErr => {
                   console.error("Error updating stock:", updateErr);
@@ -660,6 +733,7 @@ app.put("/Approval_orders/:orderId", (req, res) => {
     }
   });
 });
+
 
 //**************************processs */
 app.put('/process_order/:orderId', (req, res) => {
@@ -1078,18 +1152,6 @@ app.get('/viewproduction', (req, res) => {
   });
 });
 
-app.get('/total_products', (req, res) => {
-  const query = `
-    SELECT Product_Name, In_Stock AS totalQuantity 
-    FROM Product;`; // Adjust the table name and fields accordingly
-
-  db.query(query, (error, results) => {
-    if (error) {
-      return res.status(500).json({ error: 'Database query error' });
-    }
-    res.json(results);
-  });
-});
 
 
 // Assuming you're using Express and MySQL
@@ -1888,6 +1950,22 @@ app.get('/suppliers_by_location', (req, res) => {
     }
   });
 });
+
+///***********total  */
+
+app.get('/total_products', (req, res) => {
+  const query = `
+    SELECT Product_Name, In_Stock AS totalQuantity 
+    FROM Product;`; // Adjust the table name and fields accordingly
+
+  db.query(query, (error, results) => {
+    if (error) {
+      return res.status(500).json({ error: 'Database query error' });
+    }
+    res.json(results);
+  });
+});
+
 ///Production Report
 
 app.get('/production_report', (req, res) => {
@@ -1902,7 +1980,15 @@ app.get('/production_report', (req, res) => {
           r.R_Name AS materialName,
           pm.Quantity AS materialQuantity,
           ml.A_ID AS lotId,
-          ml.Quantity AS lotQuantity
+          ml.Quantity AS lotQuantity,
+          ri.Lot_Price AS lotPrice,
+          (ml.Quantity * ri.Lot_Price) AS cost,
+          COALESCE(SUM(pf.Quantity), 0) AS fishQuantity,
+          s.Supply_ID AS fishLotId,
+          pf.Quantity AS fishLotQuantity,
+          (s.Payment / s.Quantity) AS fishLotPrice,
+          (pf.Quantity * (s.Payment / s.Quantity)) AS fishCost,
+          ((ml.Quantity * ri.Lot_Price) + (pf.Quantity * (s.Payment / s.Quantity))) AS totalCost
       FROM
           production p
       JOIN
@@ -1913,8 +1999,17 @@ app.get('/production_report', (req, res) => {
           rawmaterial r ON pm.R_ID = r.R_ID
       JOIN
           material_lot ml ON pm.PM_ID = ml.PM_ID
+      JOIN
+          rawmaterial_inv ri ON ml.A_ID = ri.A_ID
+      LEFT JOIN
+          production_fish pf ON pf.P_ID = p.P_ID
+      LEFT JOIN
+          supply s ON pf.Supply_ID = s.Supply_ID
       WHERE
           p.Date BETWEEN ? AND ?
+      GROUP BY
+          p.P_ID, pr.Product_Name, p.Date, pm.R_ID, r.R_Name, pm.Quantity, ml.A_ID, ml.Quantity, ri.Lot_Price,
+          s.Supply_ID, pf.Quantity, s.Payment, s.Quantity
   `;
 
   db.query(query, [start, end], (error, results) => {
@@ -1922,12 +2017,73 @@ app.get('/production_report', (req, res) => {
           console.error('Error executing query:', error);
           return res.status(500).json({ message: 'Failed to fetch production data', error: error.message });
       }
-      res.json(results);
+
+      // Loop through results to update the cost in the production table
+      const updateQueries = results.map(result => {
+          return new Promise((resolve, reject) => {
+              const updateQuery = `
+                  UPDATE production
+                  SET Cost = ?
+                  WHERE P_ID = ?
+              `;
+              db.query(updateQuery, [result.totalCost, result.productionId], (err) => {
+                  if (err) {
+                      console.error('Error updating cost:', err);
+                      return reject(err);
+                  }
+                  resolve();
+              });
+          });
+      });
+
+      // Execute all update queries
+      Promise.all(updateQueries)
+          .then(() => {
+              res.json(results);
+          })
+          .catch(err => {
+              console.error('Error updating costs:', err);
+              res.status(500).json({ message: 'Failed to update production costs', error: err.message });
+          });
   });
 });
 
+//****forecast */
+app.get('/revenue', (req, res) => {
+  const { start, end } = req.query;
+
+  // Validate that both start and end dates are provided
+  if (!start || !end) {
+      return res.status(400).json({ error: 'Start and end dates are required' });
+  }
+
+  // Convert dates to the correct format if needed
+  const startDate = moment(start).format('YYYY-MM-DD');
+  const endDate = moment(end).format('YYYY-MM-DD');
+
+  const query = `
+  SELECT ao.Order_ID, co.Deliver_Date, ao.Payment, oi.Product_ID, p.Product_Name, oi.Quantity AS Order_Quantity, 
+         il.P_ID AS Production_No, il.Quantity AS Lot_Quantity, 
+         pr.Cost AS Production_Cost, pr.Quantity AS Production_Quantity
+  FROM approved_order ao
+  JOIN customer_order co ON ao.Order_ID = co.Order_ID
+  JOIN order_item oi ON ao.Order_ID = oi.Order_ID
+  JOIN product p ON oi.Product_ID = p.Product_ID
+  JOIN item_lot il ON oi.Item_O_ID = il.Item_O_ID
+  JOIN production pr ON il.P_ID = pr.P_ID
+  WHERE co.Deliver_Date BETWEEN ? AND ?;
+`;
 
 
+  db.query(query, [startDate, endDate], (error, results) => {
+      if (error) {
+          console.error('Error fetching data:', error);
+          return res.status(500).json({ error: 'Failed to fetch data' });
+      }
+      // Send the results back
+      res.json(results);
+  });
+});
 
 
 //-------------------------------------------

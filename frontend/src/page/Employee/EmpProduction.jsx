@@ -50,11 +50,13 @@ function Production() {
   const fetchProductInventory = async () => {
     try {
       const response = await axios.get('http://localhost:8081/total_products');
+      console.log("Fetched Product Inventory:", response.data); // Check if data is coming through
       setProductInventory(response.data);
     } catch (error) {
       console.error('Error fetching product inventory:', error);
     }
   };
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -152,8 +154,18 @@ function Production() {
         <div><EmpBar /></div>
         <div style={{ marginLeft: '20px', flexGrow: 1 }}>
           <Container className="mt-5">
-            <h1>Production Records</h1>
-            <Button variant="secondary" onClick={handleShowProductInv}>Product Inventory</Button>
+          <h1>Production Records</h1>
+          <Button variant="secondary" onClick={handleShowProductInv}>Product Inventory</Button>
+
+          {showProductInv && (
+  <ProductInv
+    show={showProductInv}
+    handleClose={handleCloseProductInv}
+    productionData={productInventory}
+  />
+)}
+
+
             <Table striped bordered hover className="mt-3">
               <thead>
                 <tr>

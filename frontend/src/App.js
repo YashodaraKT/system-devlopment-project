@@ -37,6 +37,7 @@ import FTest from './page/Employee/FTest';
 import AddSupplier from './page/Admin/AddSupplier';
 import Product from './page/Admin/Product';
 import ProductionReport from './page/ProductionReport.jsx';
+import RevenueReport from './page/RevenueReport.jsx';
 
 import './App.css';
 import logo from './logo.svg';
@@ -134,6 +135,7 @@ function App() {
           <Route path='/newsupplier' element={<AdminAuth><AddSupplier /></AdminAuth>}></Route>
           <Route path='/productcart' element={<ProductCart />}></Route>
           <Route path='/ProductionReport' element={<ProductionReport />}></Route>
+          <Route path='/RevenueReport' element={<RevenueReport />}></Route>
     
         </Routes>
       </BrowserRouter>

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Modal, Button, Table } from 'react-bootstrap';
 
-function ProductInv({ show, handleClose, productionData = [] }) {
+function ProductInv({ show, handleClose, productionData }) {
   return (
-    <Modal show={show} onHide={handleClose}>
+    <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>Product Inventory</Modal.Title>
       </Modal.Header>
@@ -16,12 +16,20 @@ function ProductInv({ show, handleClose, productionData = [] }) {
             </tr>
           </thead>
           <tbody>
-            {productionData.map((production, index) => (
-              <tr key={index}>
-                <td>{production.Product_Name}</td>
-                <td>{production.totalQuantity}</td> {/* Use totalQuantity from the new API response */}
+            {productionData && productionData.length > 0 ? (
+              productionData.map((production, index) => (
+                <tr key={index}>
+                  <td>{production.Product_Name}</td>
+                  <td>{production.totalQuantity}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="2" className="text-center">
+                  No data available
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </Table>
       </Modal.Body>
